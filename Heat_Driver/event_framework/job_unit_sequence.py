@@ -1,0 +1,73 @@
+#   The class of the job unit sequence
+
+from copy import deepcopy
+import importlib as ipl
+
+from common.util import get_class_func_name
+
+
+
+__author__ = 'chenxin'    
+__date__ = '2017-4-1'  
+__version__ = 1.0
+
+class JobUnitSequence(object):
+    
+    def __init__(self):
+        
+        self.job_unit_name_sequence = []
+        '''
+        job unit name sequence, each element in the sequence is a dict as follows:
+            'phase': the phase the current job units belong to
+            'jobUnits': the set contains the names of job units in the current phase
+        '''
+        self.param_mapping_sequence = []
+        '''
+        input and output parameters mapping sequence, 
+        each element in the sequence is a dict as follows:
+            'phase': the phase the current mappings used in
+            'mappings':
+                (job_unit_name): the name of the job unit the current mapping used for
+                    (input_para_name): the input parameter's name
+                        'phase': the phase when mapped parameter is output
+                        'jobUnit': the job unit name outputed the mapped parameter
+                        'para': the outputed mapped parameter
+        '''
+
+        self.job_unit_class_imports = {}
+        '''
+        the dict contains job unit classes need to be imported, 
+        the key gives the job unit name used in the job unit sequence, 
+        and the value as dict gives the module name and the class name as follows:
+            'module': the module name string
+            'class': the class name string
+        '''
+
+    def set_job_unit_name_sequence(self, seq):
+        self.job_unit_name_sequence = seq
+
+    def set_param_mapping_sequence(self, seq):
+        self.param_mapping_sequence = seq
+
+    def set_job_unit_class_imports(self, cls_imports):
+        self.job_unit_class_imports = cls_imports
+
+    def get_copy_job_unit_name_sequence(self):
+        return deepcopy(self.job_unit_name_sequence)
+
+    def get_copy_param_mapping_sequence(self):
+        return deepcopy(self.param_mapping_sequence)
+
+    def get_job_unit_class(self, job_name):
+        '''
+        get the class of the job_unit by job_name, 
+        the needed module will be imported dynamically
+        
+        '''
+        try:
+            m = ipl.import_module(self.job_unit_class_imports[job_name]['module'])
+            return getattr(m, self.job_unit_class_imports[job_name]['class'])
+        except Exception, e:
+            print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)
+            return None

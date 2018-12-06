@@ -1,0 +1,80 @@
+tosca_definitions_version: tosca_simple_profile_for_nfv_1_0
+description: WEB-FTP-VNF
+metadata:
+  id: WEB-FTP-NODE
+  vendor: iaa
+  version: 1.0.0
+node_types:
+  tosca.nodes.nfv.VNF.WEB-FTP-NODE:
+    derived_from: tosca.nodes.nfv.VNF
+    requirements:
+      virtualLink_WEB-ENDPOINT:
+        capability: tosca.capabilities. nfv.VirtualLinkable
+        relationship: tosca.relationships.nfv.VirtualLinksTo
+      virtualLink_FTP-ENDPOINT:
+        capability: tosca.capabilities. nfv.VirtualLinkable
+        relationship: tosca.relationships.nfv.VirtualLinksTo
+  tosca.nodes.nfv.VDU.Customized:
+    derived_from: tosca.nodes.nfv.VDU
+    properties:
+      vim_type:
+        type: string
+        description: vim type for the current vdu
+      flavor_type:
+        type: string
+        description: flavor type used in the vim type for the vdu
+      os_type:
+        type: string
+        description: os type for the current vdu
+topology_template:
+  inputs: {}
+  substitution_mappings:
+    node_type: tosca.nodes.nfv.VNF.WEB-FTP-NODE
+    requirements:
+      virtualLink_WEB-ENDPOINT: '[CP_WEB-NODE_WEB-PORTAL, virtualLink]'
+      virtualLink_FTP-ENDPOINT: '[CP_FTP-NODE_FTP-PORTAL, virtualLink]'
+  node_templates:
+    VDU_WEB-NODE:
+      type: tosca.nodes.nfv.VDU.Customized
+      properties:
+        vim_type: openstack
+        flavor_type: m1.tiny
+        os_type: ubuntu
+      artifacts:
+        pack_type: gzip
+        root_dir: /usr/local/artifacts/
+        get_file:
+          addr: ftp://10.10.7.124:21/5GSLM/CSAR/WEB-FTP-FLAVOR-WEB-FTP-NS-tenant-1-csar/DeploymentArtifacts/FilePacks/WEB-FTP-NODE/WEB-NODE/WEB-VNFC-pack.tar.gz
+          user: 5gslm
+          password: iaa
+      interfaces:
+        customized:
+        - interface_id: WEB-VNFC-install
+          format: ./WEB-VNFC-install.sh
+          script_path: interfaces/
+    VDU_FTP-NODE:
+      type: tosca.nodes.nfv.VDU.Customized
+      properties:
+        vim_type: openstack
+        flavor_type: m1.tiny
+        os_type: ubuntu
+      artifacts:
+        pack_type: gzip
+        root_dir: /usr/local/artifacts/
+        get_file:
+          addr: ftp://10.10.7.124:21/5GSLM/CSAR/WEB-FTP-FLAVOR-WEB-FTP-NS-tenant-1-csar/DeploymentArtifacts/FilePacks/WEB-FTP-NODE/FTP-NODE/FTP-VNFC-pack.tar.gz
+          user: 5gslm
+          password: iaa
+      interfaces:
+        customized:
+        - interface_id: FTP-VNFC-install
+          format: ./FTP-VNFC-install.sh -i 5gslm
+          script_path: interfaces/
+    CP_WEB-NODE_WEB-PORTAL:
+      type: tosca.nodes.nfv.CP
+      requirements:
+        virtualbinding: VDU_WEB-NODE
+    CP_FTP-NODE_FTP-PORTAL:
+      type: tosca.nodes.nfv.CP
+      requirements:
+        virtualbinding: VDU_FTP-NODE

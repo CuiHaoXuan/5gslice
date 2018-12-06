@@ -1,0 +1,310 @@
+nsFlavorInfo:
+  nsFlavorId: LB-WEB-FLAVOR
+  nsTypeId: LB-WEB-NS
+  version: 1.0.0
+  vendor: iaa
+  description: LB-WEB-NS:LB-WEB-FLAVOR
+slaInfo: {}
+locationInfo:
+  referencePoints: {}
+topologyInfo:
+  vnfInfo:
+    DB-NODE:
+      vnfTypeId: DB-VNF
+      vnfcInfo:
+        DB-NODE:
+          vnfcTypeId: DB-VNFC
+      connectionInfo: {}
+      endPointInfo:
+        DB-ENDPOINT:
+          vnfcNodeId: DB-NODE
+          vnfcEndPointId: DB-PORTAL
+    LB-WEB-NODE:
+      vnfTypeId: LB-WEB-VNF
+      vnfcInfo:
+        NGINX-NODE:
+          vnfcTypeId: NGINX-VNFC
+        WEB-NODE:
+          vnfcTypeId: WEB-VNFC
+      connectionInfo:
+        VNFC-CONNECTION-LB-WEB:
+          endOne:
+            vnfcNodeId: NGINX-NODE
+            vnfcEndPointId: NGINX-PORTAL
+          endTwo:
+            vnfcNodeId: WEB-NODE
+            vnfcEndPointId: WEB-PORTAL
+      endPointInfo:
+        NGINX-ENDPOINT:
+          vnfcNodeId: NGINX-NODE
+          vnfcEndPointId: NGINX-PORTAL
+        WEB-ENDPOINT:
+          vnfcNodeId: WEB-NODE
+          vnfcEndPointId: WEB-PORTAL
+  connectionInfo:
+    VNF-CONNECTION-WEB-DB:
+      endOne:
+        vnfNodeId: LB-WEB-NODE
+        vnfEndPointId: WEB-ENDPOINT
+      endTwo:
+        vnfNodeId: DB-NODE
+        vnfEndPointId: DB-ENDPOINT
+  endPointInfo:
+    LB-ENDPOINT:
+      vnfNodeId: LB-WEB-NODE
+      vnfEndPointId: NGINX-ENDPOINT
+nsdInfo:
+  nsdFile: LB-WEB-NS-LB-WEB-FLAVOR_nsd.yaml
+  csarFilePath: Definitions/LB-WEB-NS-LB-WEB-FLAVOR_nsd.yaml
+vnfdInfo:
+  DB-NODE:
+    vnfdFile: DB-NODE_vnfd.yaml
+    csarFilePath: Definitions/DB-NODE_vnfd.yaml
+  LB-WEB-NODE:
+    vnfdFile: LB-WEB-NODE_vnfd.yaml
+    csarFilePath: Definitions/LB-WEB-NODE_vnfd.yaml
+resourceInfo:
+  nsResInfo:
+    vnfResInfo:
+      DB-NODE:
+        nsdVnfNodeId: VNF_{{DB-NODE}}
+        vnfcResInfo:
+          DB-NODE:
+            vduId: VDU_{{DB-NODE}}
+            vnfcEndPointResInfo:
+              DB-PORTAL:
+                cpId: CP_{{DB-NODE}}_{{DB-PORTAL}}
+        vnfEndPointResInfo:
+          DB-ENDPOINT:
+            relatedCpId: CP_{{DB-NODE}}_{{DB-PORTAL}}
+            relatedVduId: VDU_{{DB-NODE}}
+      LB-WEB-NODE:
+        nsdVnfNodeId: VNF_{{LB-WEB-NODE}}
+        vnfcResInfo:
+          NGINX-NODE:
+            vduId: VDU_{{NGINX-NODE}}
+            vnfcEndPointResInfo:
+              NGINX-PORTAL:
+                cpId: CP_{{NGINX-NODE}}_{{NGINX-PORTAL}}
+          WEB-NODE:
+            vduId: VDU_{{WEB-NODE}}
+            vnfcEndPointResInfo:
+              WEB-PORTAL:
+                cpId: CP_{{WEB-NODE}}_{{WEB-PORTAL}}
+        vnfEndPointResInfo:
+          NGINX-ENDPOINT:
+            relatedCpId: CP_{{NGINX-NODE}}_{{NGINX-PORTAL}}
+            relatedVduId: VDU_{{NGINX-NODE}}
+          WEB-ENDPOINT:
+            relatedCpId: CP_{{WEB-NODE}}_{{WEB-PORTAL}}
+            relatedVduId: VDU_{{WEB-NODE}}
+        vnfScalingPolicyInfo:
+          WEB-SERVER-SCALE-OUT:
+            vnfdSpId: SP_WEB-SERVER-SCALE-OUT
+            targetVnfcNodeIdList:
+            - WEB-NODE
+            targetVduIdList:
+            - VDU_{{WEB-NODE}}
+deploymentArtifactInfo:
+  DB-NODE:
+    DB-NODE:
+      filePackInfo:
+        filePack: null
+        packType: null
+        csarFilePath: DeploymentArtifacts/FilePacks/DB-NODE/DB-NODE/
+        deployRootDir: null
+      imageInfo:
+        imageFile: DB-VNFC_image.qcow
+        csarFilePath: DeploymentArtifacts/Images/DB-NODE/DB-NODE/DB-VNFC_image.qcow
+  LB-WEB-NODE:
+    NGINX-NODE:
+      filePackInfo:
+        filePack: null
+        packType: null
+        csarFilePath: DeploymentArtifacts/FilePacks/LB-WEB-NODE/NGINX-NODE/
+        deployRootDir: null
+      imageInfo:
+        imageFile: NGINX-VNFC_image.qcow
+        csarFilePath: DeploymentArtifacts/Images/LB-WEB-NODE/NGINX-NODE/NGINX-VNFC_image.qcow
+    WEB-NODE:
+      filePackInfo:
+        filePack: null
+        packType: null
+        csarFilePath: DeploymentArtifacts/FilePacks/LB-WEB-NODE/WEB-NODE/
+        deployRootDir: null
+      imageInfo:
+        imageFile: WEB-VNFC_image.qcow
+        csarFilePath: DeploymentArtifacts/Images/LB-WEB-NODE/WEB-NODE/WEB-VNFC_image.qcow
+parameterInfo:
+  DB-NODE:
+    DB-NODE:
+      independentParas:
+        db-username:
+          value: 5gslm
+          isBuildInFunc: false
+        db-password:
+          value: iaa
+          isBuildInFunc: false
+        db-public-addr:
+          value: '{{get_publicIp: DB-PORTAL}}'
+          isBuildInFunc: true
+  LB-WEB-NODE:
+    NGINX-NODE:
+      dependentParas:
+        backend_addr:
+          dependency:
+            vnfNodeId: LB-WEB-NODE
+            vnfcNodeId: WEB-NODE
+            propertyId: webserver-private-addr
+            multiInstanceOption: true
+    WEB-NODE:
+      dependentParas:
+        remote-db-addr:
+          dependency:
+            vnfNodeId: DB-NODE
+            vnfcNodeId: DB-NODE
+            propertyId: db-public-addr
+            multiInstanceOption: false
+      independentParas:
+        webserver-private-addr:
+          value: '{{get_privateIp: WEB-PORTAL}}'
+          isBuildInFunc: true
+vnfcConfigInfo:
+  DB-NODE:
+    DB-NODE:
+      DB-VNFC-install:
+        scope: install
+        order: 1
+        format: ./DB-VNFC-install.sh
+        deployFileAbsPath: /usr/local/interfaces/
+        involveParas: []
+      DB-VNFC-start:
+        scope: start
+        order: 1
+        format: ./DB-VNFC-start.sh --username {{db-username}} --password {{db-password}}
+        deployFileAbsPath: /usr/local/interfaces/
+        involveParas:
+        - db-username
+        - db-password
+  LB-WEB-NODE:
+    NGINX-NODE:
+      NGINX-VNFC-install:
+        scope: install
+        order: 1
+        format: ./NGINX-VNFC-install.sh
+        deployFileAbsPath: /usr/local/interfaces/
+        involveParas: []
+      NGINX-VNFC-start:
+        scope: start
+        order: 1
+        format: ./NGINX-VNFC-start.sh --backend {{backend_addr}}
+        deployFileAbsPath: /usr/local/interfaces/
+        involveParas:
+        - backend_addr
+    WEB-NODE:
+      WEB-VNFC-install:
+        scope: install
+        order: 1
+        format: ./WEB-VNFC-install.sh
+        deployFileAbsPath: /usr/local/interfaces/
+        involveParas: []
+      WEB-VNFC-start:
+        scope: start
+        order: 1
+        format: ./WEB-VNFC-start.sh --db {{remote-db-addr}}
+        deployFileAbsPath: /usr/local/interfaces/
+        involveParas:
+        - remote-db-addr
+metricInfo:
+  NS-METRIC-1:
+    name: NS-METRIC-1
+    dimensions:
+      NS-METRIC-1-dim:
+        valueType: string
+        dimName: NS-METRIC-1-dim
+    interval: 10
+    description: NS-METRIC-1
+monitorInfo:
+  LB-WEB-NODE:
+    WEB-SERVER-LOADER-MONITOR:
+      targetVnfcNodeIds:
+      - WEB-NODE
+      locate: host
+      filePackInfo:
+        filePack: WEB-SERVER-LOADER-MONITOR_pack.tar.gz
+        packType: gzip
+        deployRootDir: /usr/local/monitors/
+        csarFilePath: Monitors/Artifacts/LB-WEB-NODE/WEB-SERVER-LOADER-MONITOR/WEB-SERVER-LOADER-MONITOR_pack.tar.gz
+      interfaceInfo:
+        WEB-SERVER-LOADER-MONITOR-install:
+          scope: install
+          order: 1
+          format: ./WEB-SERVER-LOADER-MONITOR-install.sh -c {{collector-public-addr}}
+          deployFileAbsPath: /interfaces/
+          involveParas:
+          - collector-public-addr
+        WEB-SERVER-LOADER-MONITOR-start:
+          scope: start
+          order: 1
+          format: ./WEB-SERVER-LOADER-MONITOR-start.sh
+          deployFileAbsPath: /interfaces/
+          involveParas: []
+      independentParas:
+        collector-public-addr:
+          value: 10.10.26.158
+          isBuildInFunc: false
+alarmInfo:
+  NS-ALARM-1:
+    csarFilePath: Alarms/Artifacts/NS-ALARM-1/NS-ALARM-1_pack.tar.gz
+    packType: gzip
+    statFormat: ./NS-ALARM-1.sh -m {{NS-METRIC-1}}
+    relPath: /
+    outputEnv: ALARM_RESULT
+    comparison: gt
+    threshold: 100
+    description: NS-ALARM-1
+    involveMetrics:
+    - NS-METRIC-1
+planInfo:
+  instantiatePlan:
+    planFile: ns-web-lb-instantiate.bpmn
+    csarFilePath: Plans/Instantiate/ns-web-lb-instantiate.bpmn
+  scalingPlans:
+    WEB-SERVER-SCALE-OUT:
+      planFile: web-server-scale-out.bpmn
+      csarFilePath: Plans/Scaling/WEB-SERVER-SCALE-OUT/web-server-scale-out.bpmn
+    WEB-SERVER-SCALE-IN:
+      planFile: web-server-scale-in.bpmn
+      csarFilePath: Plans/Scaling/WEB-SERVER-SCALE-IN/web-server-scale-in.bpmn
+policies:
+  vnfSharingPolicies:
+    SHARING-DB:
+      sharingType: providing
+      relatedVnfNode: DB-NODE
+  serviceExposurePolicies:
+    LB-WEB-SERVICE:
+      name: LB-WEB-SERVICE
+      description: LB-WEB-SERVICE
+      serviceMembers:
+        LB-WEB-SERVICE-member-1:
+          vnfNodeId: LB-WEB-NODE
+          serviceId: WEB-SERVICE-LB
+          serviceInfo:
+            name: WEB-SERVICE-LB
+            endPointId: NGINX-ENDPOINT
+            vnfcNodeId: NGINX-NODE
+            vnfcEndPointId: NGINX-PORTAL
+            description: WEB-SERVICE-LB@NGINX-ENDPOINT
+  propertyExposurePolicies: {}
+  scalingPolicies:
+    WEB-SERVER-SCALE-OUT:
+      alarmId: NS-ALARM-1
+      hookType: rest
+      actions:
+        WEB-SERVER-SCALE-OUT-action-1:
+          involvedEntityType: vnf
+          involvedEntityId: LB-WEB-NODE
+          scalingOpId: WEB-SERVER-SCALE-OUT
+      cooldown: 60
+      scalingPlan: WEB-SERVER-SCALE-OUT
+      description: WEB-SERVER-SCALE-OUT

@@ -1,0 +1,60 @@
+JobUnitSequences:
+  process_test_data_seq:
+    jobUnitList:
+    - phase: 0
+      jobUnits:
+      - get_test_data_job
+    - phase: 1
+      jobUnits:
+      - add_test_data_job
+    paramMappings:
+    - phase: 0
+      mappings: {}
+    - phase: 1
+      mappings:
+        add_test_data_job:
+          para_1:
+            phase: 0
+            jobUnit: get_test_data_job
+            para: para_2
+    jobUnitClasses:
+      get_test_data_job:
+        module: test_job_units.get_test_data_job
+        class: GetTestDataJob
+      add_test_data_job:
+        module: test_job_units.add_test_data_job
+        class: AddTestDataJob
+  clear_test_data_seq:
+    jobUnitList:
+    - phase: 0
+      jobUnits:
+      - clear_test_data_job
+    paramMappings:
+    - phase: 0
+      mappings: {}
+    jobUnitClasses:
+      clear_test_data_job:
+        module: test_job_units.clear_test_data_job
+        class: ClearTestDataJob
+EventTypes:
+  get_test_data_event: get the test data
+  add_test_data_event: add the test data
+  clear_test_data_event: clear all the test data
+EventProducerTypes:
+  test_data_consumer: consumer who wants the test data
+  test_data_producer: producer who produces the test data
+TaskSchedulerTypes:
+  test_data_processor:
+    module: test_task_schedulers.test_data_processor
+    class: TestDataProcessorScheduler
+    initType: INIT_TYPE_METHOD
+    initJobUnitSequence:
+    processedJobUnitSequences:
+    - process_test_data_seq
+    - clear_test_data_seq
+    processedEventTypes:
+    - get_test_data_event
+    - add_test_data_event
+    - clear_test_data_event
+    eventListenerListSyn: true
+Others: {}

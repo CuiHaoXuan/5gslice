@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <process id="vepc" name="vepc" isExecutable="true">
+    <serviceTask id="hss_configure" name="hss_configure" activiti:expression="${execution.setVariable('result', taskBean.action('32bd8b26-17f6-33d8-a9a7-93ebdab6c7f2', 'MME-HSS-NODE', 'HSS-NODE', 'configure') )}"></serviceTask>
+    <startEvent id="startevent2" name="Start"></startEvent>
+    <endEvent id="endevent2" name="End"></endEvent>
+    <serviceTask id="servicetask_finished" name="workflow_finished" activiti:expression="${execution.setVariable('result', workflowFinishedBean.RespondToSliceOM(result) ) }"></serviceTask>
+    <sequenceFlow id="flow6" sourceRef="servicetask_finished" targetRef="endevent2"></sequenceFlow>
+    <serviceTask id="mme_configure" name="mme_configure" activiti:expression="${execution.setVariable('result', taskBean.action('32bd8b26-17f6-33d8-a9a7-93ebdab6c7f2', 'MME-HSS-NODE', 'MME-NODE', 'configure') )}"></serviceTask>
+    <sequenceFlow id="flow7" sourceRef="hss_configure" targetRef="mme_configure"></sequenceFlow>
+    <serviceTask id="spgw_configure" name="spgw_configure" activiti:expression="${execution.setVariable('result', taskBean.action('32bd8b26-17f6-33d8-a9a7-93ebdab6c7f2', 'SPGW-NODE', 'SPGW-NODE', 'configure') )}"></serviceTask>
+    <sequenceFlow id="flow8" sourceRef="mme_configure" targetRef="spgw_configure"></sequenceFlow>
+    <sequenceFlow id="flow9" sourceRef="spgw_configure" targetRef="servicetask_finished"></sequenceFlow>
+    <sequenceFlow id="flow10" sourceRef="startevent2" targetRef="hss_configure"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_vepc">
+    <bpmndi:BPMNPlane bpmnElement="vepc" id="BPMNPlane_vepc">
+      <bpmndi:BPMNShape bpmnElement="hss_configure" id="BPMNShape_hss_configure">
+        <omgdc:Bounds height="60.0" width="100.0" x="360.0" y="101.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent2" id="BPMNShape_startevent2">
+        <omgdc:Bounds height="35.0" width="35.0" x="10.0" y="232.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent2" id="BPMNShape_endevent2">
+        <omgdc:Bounds height="35.0" width="35.0" x="760.0" y="233.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask_finished" id="BPMNShape_servicetask_finished">
+        <omgdc:Bounds height="60.0" width="100.0" x="630.0" y="220.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mme_configure" id="BPMNShape_mme_configure">
+        <omgdc:Bounds height="60.0" width="100.0" x="500.0" y="100.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="spgw_configure" id="BPMNShape_spgw_configure">
+        <omgdc:Bounds height="60.0" width="100.0" x="630.0" y="101.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+        <omgdi:waypoint x="730.0" y="250.0"></omgdi:waypoint>
+        <omgdi:waypoint x="760.0" y="250.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+        <omgdi:waypoint x="460.0" y="131.0"></omgdi:waypoint>
+        <omgdi:waypoint x="500.0" y="130.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
+        <omgdi:waypoint x="600.0" y="130.0"></omgdi:waypoint>
+        <omgdi:waypoint x="630.0" y="131.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
+        <omgdi:waypoint x="680.0" y="161.0"></omgdi:waypoint>
+        <omgdi:waypoint x="680.0" y="220.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow10" id="BPMNEdge_flow10">
+        <omgdi:waypoint x="27.0" y="232.0"></omgdi:waypoint>
+        <omgdi:waypoint x="410.0" y="161.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

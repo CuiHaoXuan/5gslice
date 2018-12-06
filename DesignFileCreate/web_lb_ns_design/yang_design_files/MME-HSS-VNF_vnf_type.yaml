@@ -1,0 +1,43 @@
+Info:
+  vnfTypeId: MME-HSS-VNF
+  version: 1.0.0
+  vendor: iaa
+  description: MME-HSS-VNF
+VnfcNodes:
+  MME-NODE:
+    vnfcTypeId: MME-VNFC
+  HSS-NODE:
+    vnfcTypeId: HSS-VNFC
+EndPoints:
+  MME-ENDPOINT:
+    vnfcNodeId: MME-NODE
+    vnfcEndPointId: MME-PORTAL
+    description: MME-NODE:MME-PORTAL
+  HSS-ENDPOINT:
+    vnfcNodeId: HSS-NODE
+    vnfcEndPointId: HSS-PORTAL
+    description: HSS-NODE:HSS-PORTAL
+Connections:
+    VNFC-CONNECTION-MME-HSS:
+      vnfcRelationshipTypeId: VNFC-RELATION-MME-HSS
+    endOne:
+      vnfcNodeId: MME-NODE
+      vnfcEndPointId: MME-PORTAL
+    endTwo:
+      vnfcNodeId: HSS-NODE
+      vnfcEndPointId: HSS-PORTAL
+VnfcPropertiesMapping:
+    MME-HSS-ADDR-MAPPING:
+    multiInstanceOption: true
+    sourceProperty:
+      vnfcNodeId: MME-NODE
+      propertyId: mme-public-addr
+    targetProperty:
+      vnfcNodeId: HSS-NODE
+      propertyId: mme-addr
+ServiceExposures:
+  MME-HSS-SERVICE-SE:
+    name: MME-HSS-SERVICE-SE
+    exposureEndPointId: MME-ENDPOINT
+    description: MME-HSS-SERVICE-SE@MME-ENDPOINT
+

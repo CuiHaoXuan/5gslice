@@ -1,0 +1,206 @@
+#   scripts for openstack rest operations from third party
+
+
+import sys  
+import os  
+import json  
+import urllib2
+  
+USERNAME = 'admin'
+PASSWORD = 'password'
+TENANTNAME = 'admin'
+
+SERVICE_SUFFIX = [SERVER, HYPERVISOR, HYPERVISOR_STAT, STACKS] = \
+                 ['/servers', '/os-hypervisors', '/os-hypervisors/statistics', '/stacks']
+SERVICE_NAME = [NOVA, HEAT, Neutron] = \
+               ['nova', 'heat', 'neutron']
+
+class OsRestClient(object):
+
+    def __init__(self, addr, username, password, tenantname):
+
+        self.control_addr = addr
+        self.username = username
+        self.password = password
+        self.tenantname = tenantname
+        ddata = self._os_authenticate()
+        self.token = self._os_get_token(ddata)
+        self.serv_url_public = self._os_get_service_public_url(ddata)
+        self.serv_url_internal = self._os_get_service_internal_url(ddata)
+
+    def _os_authenticate(self):
+    
+        '''
+        get authenticate info
+    
+        '''
+        url = 'http://' + self.control_addr + ':35357/v2.0/tokens'  
+        values = {"auth":{"passwordCredentials":{"username":self.username,\
+                                             "password":self.password},\
+                                             "tenantName":self.tenantname}}  
+        params = json.dumps(values)  
+        headers = {"Content-type":"application/json","Accept": "application/json"}  
+        req = urllib2.Request(url, params, headers)  
+        response = urllib2.urlopen(req)  
+        data = response.read()
+        ddata=json.loads(data)
+        return ddata
+        
+    def _os_get_token(self, ddata):
+
+        '''
+        get token from authenticate info
+
+        '''
+        return ddata['access']['token']['id']
+
+    def _os_get_service_public_url(self, ddata):
+
+        '''
+        get public url of all the services from authenticate info
+        a dict is returned with the key as the service name,
+        and the value as the public url
+
+        '''
+        serv_url = {}
+        for s in ddata['access']['serviceCatalog']:
+            serv_url[s['name']] = s['endpoints'][0]['publicURL']\
+                                   .replace('controller', self.control_addr)
+        return serv_url
+
+    def _os_get_service_internal_url(self, ddata):
+
+        '''
+        get internal url of all the services from authenticate info
+        a dict is returned with the key as the service name,
+        and the value as the internal url
+
+        '''
+        serv_url = {}
+        for s in ddata['access']['serviceCatalog']:
+            serv_url[s['name']] = s['endpoints'][0]['internalURL']
+        return serv_url
+    
+    def _gen_general_os_req(self, serv_name, serv_suffix, ddata=None):
+
+        '''
+        generate the general openstack rest api request
+
+        '''
+        url = self.serv_url_public[serv_name] + serv_suffix
+        headers = {'X-Auth-Token': self.token, "Accept": "application/json"}
+        if ddata:
+            headers.update({"Content-type":"application/json"})
+            if isinstance(ddata, dict):
+                ddata = json.dumps(dict(ddata))
+        req = urllib2.Request(url, ddata, headers)
+        return req
+    
+    def _get_os_resp(req):
+
+        '''
+        get the response from a openstack rest api call
+        in accordance with the req
+
+        '''
+        return json.loads(urllib2.urlopen(req).read())
+
+    
+    def _gen_os_nova_req(self, serv_suffix, ddata=None):
+
+        '''
+        generate the openstack nova rest api request 
+
+        '''
+        return self._gen_general_os_req(NOVA, serv_suffix, ddata)
+
+    def _gen_os_heat_req(self, serv_suffix, ddata=None):
+
+        '''
+        generate the openstack heat rest api request 
+
+        '''
+        return self._gen_general_os_req(HEAT, serv_suffix, ddata)
+
+
+    def _gen_os_neutron_req(self, serv_suffix, ddata=None):
+
+        '''
+        generate the openstack heat rest api request 
+
+        '''
+        return self._gen_general_os_req(NEUTRON, serv_suffix, ddata)
+    
+    def update_auth_info(self):
+        
+        '''
+        update the authenticate info
+
+        '''
+        ddata = self._os_authenticate()
+        self.token = self._os_get_token(ddata)
+        self.serv_url_public = self._os_get_service_public_url(ddata)
+        self.serv_url_internal = self._os_get_service_internal_url(ddata)
+
+    def get_os_login_addr(self):
+        return 'http://' + self.control_addr + '/dashboard/auth/login/'
+    
+    def create_heat_stack(self, tpl):
+    
+        '''
+        get authenticate info
+    
+        '''
+        req = self._gen_os_heat_req(STACKS, tpl)
+        ddata = _get_os_resp(req)
+    
+    def get_hypervisors_stat(self):
+
+        '''
+        get the statistic info of the hypervisor
+
+        '''
+        req = self._gen_os_nova_req(HYPERVISOR_STAT)  
+        return _get_os_resp(req)['hypervisor_statistics']
+    
+    def get_vm_list(self):
+
+        '''
+        get the vm list on the current platform
+        
+        '''
+        req = self._gen_os_nova_req(SERVER)
+        return _get_os_resp(req)['servers']
+
+    
+    def get_vm_id_by_name(self, vm_n):
+        
+        '''
+        get the vm id by vm name
+
+        '''
+        req = self._gen_os_nova_req(SERVER)     
+        vm_list=_get_os_resp(req)['servers']
+        for vm in vm_list:
+            if(vm['name'] == vm_n):
+                vm_id= i['id']
+        return vm_id
+
+    def get_vm_details_by_id(self, vm_id):
+        
+        '''
+        get the vm detail info by vm id
+
+        '''
+        req = self._gen_os_nova_req(SERVER + '/' + vm_id)  
+        return _get_os_resp(req)['server']
+
+    def get_vm_details_by_name(self, vm_n):
+        
+        '''
+        get the vm detail info by vm name
+
+        '''
+        vm_id = get_vm_id_by_name(vm_n)
+        req = self._gen_os_nova_req(SERVER + '/' + vm_id)  
+        return _get_os_resp(req)['server']

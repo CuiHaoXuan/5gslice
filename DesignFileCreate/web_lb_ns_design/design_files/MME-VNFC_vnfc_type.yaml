@@ -1,0 +1,62 @@
+Info:
+  vnfcTypeId: MME-VNFC
+  vnfAffiliation:
+  - MME-HSS-VNF
+  version: 1.0.0
+  vendor: iaa
+  description: MME-VNFC
+DeploymentArtifact:
+  imageInfo:
+    imageType: qcow
+    image: mme
+    getFile: /opt/code_phase_two/DesignFileCreate/web_lb_ns_design/user_upload_files/vnfc_images/mme
+  filePackInfo:
+    filePack: null
+    getFile: null
+    packType: null
+    rootDir: null
+DeploymentFlavorConstraints:
+  hostFlavorDesc:
+    vimType: openstack
+    vmFlavor:
+    - m1.large
+EndPoints:
+  MME-PORTAL:
+    description: MME-PORTAL
+ConfigurableProperties:
+  mme-public-addr:
+    valueType: string
+    defaultValue: null
+    description: mme-public-addr
+  hss-remote-addr:
+    valueType: string
+    defaultValue: null
+    description: hss-remote-addr
+  spgw-remote-addr:
+    valueType: string
+    defaultValue: null
+    description: spgw-remote-addr
+  mme-private-addr:
+    valueType: string
+    defaultValue: null
+    description: mme-private-addr
+Interfaces:
+  mme-set-addr:
+    scope: configure
+    order: 1
+    format: ./mme-set-addr -n {{hss-remote-addr}} -m {{mme-private-addr}}/24 -s {{spgw-remote-addr}}/24
+      -M 208 93
+    absPath: /bin/
+    description: mme-set-addr
+  mme-start:
+    scope: start
+    order: 1
+    format: ./mme-start
+    absPath: /bin/
+    description: mme-start
+  mme-stop:
+    scope: stop
+    order: 1
+    format: ./mme-stop
+    absPath: /bin/
+    description: mme-stop

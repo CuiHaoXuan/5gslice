@@ -1,0 +1,33 @@
+Info:
+  nsComboFlavorId: vEPC-SERVICE
+  version: 1.0.0
+  vendor: iaa
+  description: vEPC-SERVICE
+SubNsFlavors:
+  vEPC-SUBNS-1:
+    nsTypeId: vEPC-NS
+    nsFlavorId: vEPC-FLAVOR
+EndPoints:
+  vEPC-SUBNS-1-ENDPOINT:
+    subNsNodeId: vEPC-SUBNS-1
+    nsEndPointId: vEPC-ENDPOINT
+    description: vEPC-SUBNS-1-ENDPOINT
+Connections: {}
+ServiceLevelAgreementFlavors:
+  ns-combo-sla-1:
+    valueType: num
+    description: ns-combo-sla-1
+    value: 100
+Policies:
+  vnfSharingPolicies: {}
+  serviceExposurePolicies: {}
+  propertyExposurePolicies: {}
+  scalingPolicies: {}
+LocationAwareness:
+  vnfLocations:
+    vEPC-SUBNS-1:
+      MME-HSS-NODE:
+        locationDescription: MME-HSS-NODE@vEPC-SUBNS-1
+      SPGW-NODE:
+        locationDescription: SPGW-NODE@vEPC-SUBNS-1
+  referencePoints: {}

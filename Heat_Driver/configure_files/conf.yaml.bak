@@ -1,0 +1,45 @@
+JobUnitSequences:
+  vnf_res_deploy_job_seq:
+    jobUnitList:
+    - phase: 0
+      jobUnits:
+      - gen_vnf_res_ctx_job
+    paramMappings:
+    - phase: 0
+      mappings: {}
+    jobUnitClasses:
+      gen_vnf_res_ctx_job:
+        module: heat_driver_job_units.gen_vnf_res_ctx_job
+        class: VnfResCtxGenerateJob
+EventTypes:
+  vnf_res_deploy_request: request to deploy a vnf resource
+  vnf_res_info_acquire: acquire the vnf resource info
+EventProducerTypes:
+  local_rest_api: the local rest api of this component
+TaskSchedulerTypes:
+  vnf_res_processor:
+    module: heat_driver_task_schedulers.vnf_res_processor
+    class: VnfResProcessorScheduler
+    initType: INIT_TYPE_METHOD
+    initJobUnitSequence:
+    processedJobUnitSequences:
+    - vnf_res_deploy_job_seq
+    processedEventTypes:
+    - vnf_res_deploy_request
+    - vnf_res_info_acquire
+    eventListenerListSyn: true
+Others:
+  localService:
+    name: heatDriver-1
+  remoteServices:
+    vim-1:
+      type: openstack
+      endpoint: 127.0.0.1
+      datacenters:
+      - datacenter-1
+      userAdmin: admin
+      passwdAdmin: admin
+      userTenants:
+      - demo
+      paswdTenants:
+      - demo

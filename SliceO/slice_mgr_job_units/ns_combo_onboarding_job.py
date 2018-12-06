@@ -1,0 +1,68 @@
+#   The class of the ns combo onboarding job unit
+
+
+import os
+from collections import OrderedDict
+
+from common.util import get_class_func_name, CONTEXT_NAMESPACE_NS_COMBO
+#   from common.yaml_util import yaml_ordered_load as yaml_load
+from event_framework.job_unit import JobUnit
+from event_framework.event import META_EVENT_TYPE, META_EVENT_PRODUCER
+
+
+__author__ = 'chenxin'    
+__date__ = '2017-6-2'  
+__version__ = 1.0
+
+
+class NsComboOnboardingJob(JobUnit):
+    
+    '''
+    this job is used to onboarding the ns combo.
+    the works done by this job are:
+        call the csar on-boarding service to on-boarding the csar of each sub slice 
+    '''
+    
+    
+    def __init__(self, task_unit, job_n, **params):
+        
+        '''
+        params:
+            task_unit: the task unit instance this job unit belongs to
+            job_n: the name of this job given in the job unit sequence
+            params: other parameters may used for extension
+        '''
+        super(NsComboOnboardingJob, self).__init__(task_unit, job_n, **params)
+
+    def execute_job(self, **params):
+
+        '''
+        called by the task unit to start the execution of this job.
+        derived job unit class should override this method to deploy own processing logic
+
+        '''
+        try:
+            self.event = self.task_unit.get_triggered_event()
+            self.ns_combo_id = self.event.get_event_data().get('ns_combo_id', None)
+            r_data = {'status': 'request accepted'}
+            self.event.set_return_data_syn(r_data)
+            self._onboarding_csars()
+            self._execution_finish()
+        except Exception, e:
+            print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)
+            self._execution_exception(Exception, e)
+
+    def _onboarding_csars(self):
+
+        '''
+        onboarding csar of each sub slice 
+
+        '''
+        sch = self.task_unit.task_scheduler
+        ctx_store = sch.context_store
+        ctx_h = ctx_store.get_context_item_process_handler(CONTEXT_NAMESPACE_NS_COMBO, self.ns_combo_id) 
+        for k, v in ctx_h.get_context_item()['subSliceInfo'].items():
+            v['relatedSubSliceId'] = sch.req_csar_onboarding_serv(v['relatedCsarId']).get('allocSliceId', None)
+        ctx_h.process_finish()
+        

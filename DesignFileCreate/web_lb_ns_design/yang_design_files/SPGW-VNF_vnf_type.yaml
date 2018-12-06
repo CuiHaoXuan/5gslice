@@ -1,0 +1,20 @@
+Info:
+  vnfTypeId: SPGW-VNF
+  version: 1.0.0
+  vendor: iaa
+  description: SPGW-VNF
+VnfcNodes:
+  SPGW-NODE:
+    vnfcTypeId: SP-VNFC
+EndPoints:
+  SPGW-ENDPOINT:
+    vnfcNodeId: SPGW-NODE
+    vnfcEndPointId: SPGW-PORTAL
+    description: SPGW-NODE:MME-PORTAL
+Connections: {}
+VnfcPropertiesMapping: {}
+ServiceExposures: {}
+MonitorOptions: {}
+ScalingInfo:
+  scalingGroups: {}
+  scalingOperations: {}

@@ -1,0 +1,44 @@
+flavorInfo:
+  flavorId: vEPC-SERVICE
+  version: 1.0.0
+  vendor: iaa
+  description: vEPC-SERVICE
+subscriberInfo:
+  tenantId: tenant-1
+  tradeId: '2018-01-23 16:57:40'
+  description: subscribed by tenant-1
+slaInfo:
+  ns-combo-sla-1:
+    value:
+      valueType: num
+      description: ns-combo-sla-1
+      value: 100
+locationInfo:
+  vnfLocations:
+    vEPC-SUBNS-1:
+      MME-HSS-NODE:
+        locationDescription: MME-HSS-NODE@vEPC-SUBNS-1
+        locatorName: core DC
+      SPGW-NODE:
+        locationDescription: SPGW-NODE@vEPC-SUBNS-1
+        locatorName: regional DC
+  referencePoints: {}
+topologyInfo:
+  subNsInfo:
+    vEPC-SUBNS-1:
+      nsTypeId: vEPC-NS
+  connectionInfo: {}
+  endPointInfo:
+    vEPC-SUBNS-1-ENDPOINT:
+      subNsNodeId: vEPC-SUBNS-1
+      subNsEndPointId: vEPC-ENDPOINT
+      relatedVnfNodeId: SPGW-NODE
+      relatedVnfEndPointId: SPGW-ENDPOINT
+subNsCsarInfo:
+  vEPC-SUBNS-1:
+    csarPackName: vEPC-SUBNS-1_vEPC-FLAVOR_vEPC-NS_csar.tar.gz
+policies:
+  vnfSharingPolicies: {}
+  serviceExposurePolicies: {}
+  propertyExposurePolicies: {}
+  scalingPolicies: {}

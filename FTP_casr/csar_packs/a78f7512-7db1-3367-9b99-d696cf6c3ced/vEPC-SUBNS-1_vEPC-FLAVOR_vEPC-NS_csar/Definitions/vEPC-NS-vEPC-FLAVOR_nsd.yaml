@@ -1,0 +1,30 @@
+tosca_definitions_version: tosca_simple_profile_for_nfv_1_0
+description: vEPC-NS:vEPC-FLAVOR
+metadata:
+  id: vEPC-NS_vEPC-FLAVOR
+  vendor: iaa
+  version: 1.0.0
+imports:
+- SPGW-NODE_vnfd.yaml
+- MME-HSS-NODE_vnfd.yaml
+topology_template:
+  node_templates:
+    VNF_{{SPGW-NODE}}:
+      type: tosca.nodes.nfv.VNF.SPGW-NODE
+      requirements:
+        virtualLink_{{SPGW-ENDPOINT}}:
+        - VL_{{vEPC-ENDPOINT}}
+        - VL_{{VNF-CONNECTION-vEPC}}
+    VNF_{{MME-HSS-NODE}}:
+      type: tosca.nodes.nfv.VNF.MME-HSS-NODE
+      requirements:
+        virtualLink_{{MME-ENDPOINT}}:
+        - VL_{{VNF-CONNECTION-vEPC}}
+    CP_{{vEPC-ENDPOINT}}:
+      type: tosca.nodes.nfv.CP
+      requirements:
+        virtualLink: VL_{{vEPC-ENDPOINT}}
+    VL_{{vEPC-ENDPOINT}}:
+      type: tosca.nodes.nfv.VL.ELine
+    VL_{{VNF-CONNECTION-vEPC}}:
+      type: tosca.nodes.nfv.VL.ELine

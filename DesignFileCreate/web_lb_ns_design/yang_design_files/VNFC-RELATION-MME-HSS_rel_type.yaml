@@ -1,0 +1,12 @@
+Info:
+  vnfcRelationshipTypeId: VNFC-RELATION-MME-HSS
+  relationshipStyle: connectTo
+  version: 1.0.0
+  vendor: iaa
+  description: MME-VNFC:MME-PORTAL->HSS-VNFC:HSS-PORTAL
+SourceEndType:
+  vnfcTypeId: MME-VNFC
+  vnfcEndPointId: MME-PORTAL
+TargetEndType:
+  vnfcTypeId: HSS-VNFC
+  vnfcEndPointId: HSS-PORTAL

@@ -1,0 +1,30 @@
+#   The class of the test configurer
+
+from collections import OrderedDict
+import os
+
+from common.util import get_class_func_name
+from event_framework.configurer import Configurer
+
+
+__author__ = 'chenxin'    
+__date__ = '2017-4-9'  
+__version__ = 1.0
+
+CONF_FILE = 'test_conf.yaml'
+
+class TestConfigurer(Configurer):
+    
+    def __init__(self):
+        
+        f_p = os.path.join(*[os.getcwd(), CONF_FILE])
+        super(TestConfigurer, self).__init__(f_p)
+
+    def _init(self):
+        
+        '''
+        init method of the configurer, 
+        derived configurer class could override this method
+        
+        '''
+        pass

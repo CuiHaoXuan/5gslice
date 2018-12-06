@@ -1,0 +1,89 @@
+tosca_definitions_version: tosca_simple_profile_for_nfv_1_0
+description: MME-HSS-VNF
+metadata:
+  id: MME-HSS-NODE
+  vendor: iaa
+  version: 1.0.0
+node_types:
+  tosca.nodes.nfv.VNF.MME-HSS-NODE:
+    derived_from: tosca.nodes.nfv.VNF
+    requirements:
+      virtualLink_{{MME-ENDPOINT}}:
+        capability: tosca.capabilities. nfv.VirtualLinkable
+        relationship: tosca.relationships.nfv.VirtualLinksTo
+      virtualLink_{{HSS-ENDPOINT}}:
+        capability: tosca.capabilities. nfv.VirtualLinkable
+        relationship: tosca.relationships.nfv.VirtualLinksTo
+      virtualLink_{{mgmtAgent}}:
+        capability: tosca.capabilities. nfv.VirtualLinkable
+        relationship: tosca.relationships.nfv.VirtualLinksTo
+  tosca.nodes.nfv.VDU.Customized:
+    derived_from: tosca.nodes.nfv.VDU
+    properties:
+      vim_type:
+        type: string
+        description: vim type for the current vdu
+      flavor_type:
+        type: string
+        description: flavor type used in the vim type for the vdu
+      os_type:
+        type: string
+        description: os type for the current vdu
+      image_name:
+        type: string
+        description: image file name used for the vdu
+      image_location:
+        type: string
+        description: location of the image file
+topology_template:
+  inputs: {}
+  substitution_mappings:
+    node_type: tosca.nodes.nfv.VNF.MME-HSS-NODE
+    requirements:
+      virtualLink_{{MME-ENDPOINT}}: '[CP_{{MME-NODE}}_{{MME-PORTAL}}, virtualLink]'
+      virtualLink_{{HSS-ENDPOINT}}: '[CP_{{HSS-NODE}}_{{HSS-PORTAL}}, virtualLink]'
+      virtualLink_{{mgmtAgent}}: '[CP_{{mgmtAgent}}_{{mgmtAgent}}, virtualLink]'
+  node_templates:
+    VDU_{{MME-NODE}}:
+      type: tosca.nodes.nfv.VDU.Customized
+      properties:
+        vim_type: openstack
+        flavor_type: m1.tiny
+        os_type: ubuntu14.04
+        image_name: MME-VNFC_image.qcow
+        image_location: null
+    VDU_{{HSS-NODE}}:
+      type: tosca.nodes.nfv.VDU.Customized
+      properties:
+        vim_type: openstack
+        flavor_type: m1.tiny
+        os_type: ubuntu14.04
+        image_name: HSS-VNFC_image.qcow
+        image_location: null
+    VDU_{{mgmtAgent}}:
+      type: tosca.nodes.nfv.VDU.Customized
+      properties:
+        vim_type: openstack
+        flavor_type: m1.tiny
+        os_type: ubuntu14.04
+        image_name: HSS-VNFC_image.qcow
+        image_location: null
+    CP_{{MME-NODE}}_{{MME-PORTAL}}:
+      type: tosca.nodes.nfv.CP
+      requirements:
+        virtualbinding: VDU_{{MME-NODE}}
+        virtualLink:
+        - internal_VL_{{VNFC-CONNECTION-MME-HSS}}
+    CP_{{HSS-NODE}}_{{HSS-PORTAL}}:
+      type: tosca.nodes.nfv.CP
+      requirements:
+        virtualbinding: VDU_{{HSS-NODE}}
+        virtualLink:
+        - internal_VL_{{VNFC-CONNECTION-MME-HSS}}
+    internal_VL_{{VNFC-CONNECTION-MME-HSS}}:
+      type: tosca.nodes.nfv.VL.ELAN
+    CP_{{mgmtAgent}}_{{mgmtAgent}}:
+      type: tosca.nodes.nfv.CP
+      requirements:
+        virtualbinding: VDU_{{mgmtAgent}}
+  policies: {}

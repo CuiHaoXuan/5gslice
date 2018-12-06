@@ -1,0 +1,37 @@
+heat_template_version: 2016-10-14
+
+description:
+
+parameters:
+  private_net:
+    type: string
+    description: The network for the VM
+  public_net:
+    type: string
+    description: ID of public network for which floating IP addresses will be allocated
+  image:
+    type: string
+    description: ID of public network for which floating IP addresses will be allocated
+  flavor:
+    type: string
+    description: ID of public network for which floating IP addresses will be allocated
+
+resources:
+  MME:
+    type: OS::Nova::Server
+    properties:
+      image: { get_param : image }
+      flavor: { get_param : flavor}
+      networks:
+        - port: { get_resource: 'MME_port' }
+
+  MME_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: private_net }
+
+  MME_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public_net }
+      port_id: { get_resource: 'MME_port' }

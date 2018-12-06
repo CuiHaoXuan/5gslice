@@ -1,0 +1,20 @@
+Info:
+  nsComboFlavorId: vEPC-SERVICE
+  tenantId: tenant-1
+  tradeId: '2018-01-23 22:58:59'
+  description: subscribed by tenant-1
+SubscribedPolicies:
+  vnfSharingPlicies: []
+  serviceExposurePolicies: []
+  propertyExposurePolicies: []
+  scalingPolicies: []
+LocationAwareness:
+  referencePoints: {}
+  vnfLocations:
+    vEPC-SUBNS-1:
+      MME-HSS-NODE:
+        locationDescription: MME-HSS-NODE@vEPC-SUBNS-1
+        locatorName: core DC
+      SPGW-NODE:
+        locationDescription: SPGW-NODE@vEPC-SUBNS-1
+        locatorName: regional DC

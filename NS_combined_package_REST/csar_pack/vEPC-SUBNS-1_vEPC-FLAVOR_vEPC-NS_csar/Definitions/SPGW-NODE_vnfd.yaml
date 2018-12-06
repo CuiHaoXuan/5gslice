@@ -1,0 +1,71 @@
+tosca_definitions_version: tosca_simple_profile_for_nfv_1_0
+description: SPGW-VNF
+metadata:
+  id: SPGW-NODE
+  vendor: iaa
+  version: 1.0.0
+node_types:
+  tosca.nodes.nfv.VNF.SPGW-NODE:
+    derived_from: tosca.nodes.nfv.VNF
+    requirements:
+      virtualLink_{{SPGW-ENDPOINT}}:
+        capability: tosca.capabilities. nfv.VirtualLinkable
+        relationship: tosca.relationships.nfv.VirtualLinksTo
+  tosca.nodes.nfv.VDU.Customized:
+    derived_from: tosca.nodes.nfv.VDU
+    properties:
+      vim_type:
+        type: string
+        description: vim type for the current vdu
+      flavor_type:
+        type: string
+        description: flavor type used in the vim type for the vdu
+      os_type:
+        type: string
+        description: os type for the current vdu
+      image_name:
+        type: string
+        description: image file name used for the vdu
+      image_location:
+        type: string
+        description: location of the image file
+topology_template:
+  inputs: {}
+  substitution_mappings:
+    node_type: tosca.nodes.nfv.VNF.SPGW-NODE
+    requirements:
+      virtualLink_{{SPGW-ENDPOINT}}: '[CP_{{SPGW-NODE}}_{{SPGW-PORTAL}}, virtualLink]'
+  node_templates:
+    VDU_{{SPGW-NODE}}:
+      type: tosca.nodes.nfv.VDU.Customized
+      properties:
+        vim_type: openstack
+        flavor_type: m1.large
+        os_type: spgw
+        image_name: spgw
+        image_location: null
+    CP_{{SPGW-NODE}}_{{SPGW-PORTAL}}:
+      type: tosca.nodes.nfv.CP
+      requirements:
+        virtualbinding: VDU_{{SPGW-NODE}}
+  policies:
+    SP_SPGWScaleOut_{{SPGW-NODE}}_OUT:
+      type: tosca.policies.Scaling
+      properties:
+        increment: '1'
+        cooldown: '60'
+        min_instances: '1'
+        max_instances: '2'
+        default_instances: '1'
+        targets:
+        - VDU_{{SPGW-NODE}}
+    SP_SPGWScaleIn_{{SPGW-NODE}}_IN:
+      type: tosca.policies.Scaling
+      properties:
+        increment: '-1'
+        cooldown: '60'
+        min_instances: '1'
+        max_instances: '2'
+        default_instances: '1'
+        targets:
+        - VDU_{{SPGW-NODE}}

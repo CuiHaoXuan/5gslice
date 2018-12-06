@@ -1,0 +1,162 @@
+{
+  "tosca_definitions_version": "tosca_simple_profile_for_nfv_1_0",
+  "description": {
+    "metadata": {
+      "id": "vnf_web",
+      "vendor": "IAA",
+      "version": "1.0"
+    }
+  },
+  "node_types": {
+    "tosca.nodes.nfv.VNF.WEB": {
+      "derived_from": "tosca.nodes.nfv.VNF",
+      "requirements": {
+        "virtualLink_mgmtAgent": {
+          "capability": "tosca.capabilities.nfv.VirtualLinkable",
+          "relationship": "tosca.relationships.nfv.VirtualLinksTo"
+        },
+        "virtualLink_internet": {
+          "capability": "tosca.capabilities. nfv.VirtualLinkable",
+          "relationship": "tosca.relationships.nfv.VirtualLinksTo"
+        }
+      }
+    },
+    "tosca.nodes.nfv.VDU.Customized": {
+      "derived_from": "tosca.nodes.nfv.VDU",
+      "properties": {
+        "vim_type": {
+          "type": "string",
+          "description": "the VIM type used to deploy the current VDU"
+        },
+        "flavor_type": {
+          "type": "string",
+          "description": "flavor type used for the VDU in the (vim_type)"
+        },
+        "os_type": {
+          "type": "string",
+          "description": "os used for the VDU"
+        },
+        "image_name": {
+          "type": "string",
+          "description": "image file name used for the VDU"
+        },
+        "image_location": {
+          "type": "string",
+          "description": "type of the image file"
+        },
+        "username": {
+          "type": "string",
+          "description": "the username used to login the vdu instances"
+        },
+        "password": {
+          "type": "string",
+          "description": "the password used to login the vdu instances"
+        }
+      }
+    }
+  },
+  "topology_template": {
+    "outputs": {
+      "CP_WEB_INTERNET_privateIp": {
+        "node": "CP_WEB_INTERNET",
+        "attr": "private_ip"
+      },
+
+      "CP_WEB_INTERNET_publicIp": {
+        "node": "CP_WEB_INTERNET",
+        "attr": "public_ip"
+      },
+      "CP_mgmtAgent_publicIp": {
+        "node": "CP_mgmtAgent",
+        "attr": "public_ip"
+      },
+      "SP_1_url": {
+        "node": "SP_1",
+        "attr": "alarm_url"
+      }
+    },
+    "substitution_mappings": {
+      "node_type": "tosca.nodes.nfv.VNF.WEB",
+      "requirements": {
+        "virtualLink_mgmtAgent": [
+          "CP_mgmtAgent",
+          "virtualLink"
+        ],
+        "virtualLink_internet": [
+          "CP_WEB_FTP",
+          "virtualLink"
+        ]
+      }
+    },
+    "node_templates": {
+      "VDU_WEB": {
+        "type": "tosca.nodes.nfv.VDU.Customized",
+        "properties": {
+          "vim_type": "(vimType)",
+          "flavor_type": "(vmFlavor)",
+          "os_type": "(osType)",
+          "username": "root",
+          "password": "123456"
+        }
+      },
+      "VDU_mgmtAgent": {
+        "type": "tosca.nodes.nfv.VDU.Customized",
+        "properties": {
+          "vim_type": "openstack",
+          "flavor_type": "m1.tyny",
+          "os_type": "ubuntu",
+          "username": "root",
+          "password": "123456"
+        }
+      },
+      "CP_WEB_FTP": {
+        "type": "tosca.nodes.nfv.CP",
+        "requirements": {
+          "virtualbinding": "VDU_WEB",
+          "virtualLink": "internal_VL_1"
+        }
+      },
+      "CP_WEB_INTERNET": {
+        "type": "tosca.nodes.nfv.CP",
+        "requirements": {
+          "virtualbinding": "VDU_WEB"
+        }
+      },
+      "CP_mgmt_WEB": {
+        "type": "tosca.nodes.nfv.CP",
+        "requirements": {
+          "virtualbinding": "VDU_WEB",
+          "virtualLink": "internal_VL_mgmt"
+        }
+      },
+      "CP_mgmtAgent": {
+        "type": "tosca.nodes.nfv.CP",
+        "requirements": {
+          "virtualbinding": "VDU_mgmtAgent",
+          "virtualLink": "internal_VL_mgmt"
+        }
+      },
+      "internal_VL_1": {
+        "type": "tosca.nodes.nfv.VL.ELAN"
+      },
+      "inernal_VL_mgmt": {
+        "type": "tosca.nodes.nfv.VL.ELAN"
+      }
+    },
+    "policies": {
+      "SP_1":{
+		  "type": "tosca.policies.Scaling",
+		  "properties": {
+				"increment": "1",
+				"cooldown": "120",
+				"min_instances": "1",
+				"max_instances": "3",
+				"default_instances": "2",
+				"targets": [
+					"VDU_WEB"
+				]
+			}
+      }
+    }
+  }
+}

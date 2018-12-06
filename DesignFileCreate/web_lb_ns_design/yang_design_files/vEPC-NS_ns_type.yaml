@@ -1,0 +1,47 @@
+Info:
+  nsTypeId: vEPC-NS
+  version: 1.0.0
+  vendor: iaa
+  description: vEPC-NS
+VnfNodes:
+  MME-HSS-NODE:
+    vnfTypeId: MME-VNF
+  SPGW-NODE:
+    vnfTypeId: SPGW-VNF
+EndPoints:
+  LB-ENDPOINT:
+    vnfNodeId: SPGW-NODE
+    vnfEndPointId: SPGW-ENDPOINT
+    description: SPGW-NODE:SPGW-ENDPOINT
+Connections:
+  VNF-CONNECTION-vEPC:
+    vnfRelationshipTypeId: VNF-RELATION-vEPC
+    endOne:
+      vnfNodeId: MME-HSS-NODE
+      vnfEndPointId: MME-ENDPOINT
+    endTwo:
+      vnfNodeId: SPGW-NODE
+      vnfEndPointId: SPGW-ENDPOINT
+VnfPropertiesMapping:
+  vEPC-ADDR-MAPPING:
+    multiInstanceOption: false
+    sourceProperty:
+      vnfNodeId: SPGW-NODE
+      propertyId: spgw-addr
+      vnfcNodeId: SPGW-NODE
+    targetProperty:
+      vnfNodeId: MME-NODE
+      vnfcNodeId: MME-NODE
+      propertyId: spgw-remote-addr
+
+ServiceLevelAgreement:
+  NS-SLA-1:
+    valueType: num
+    defaultValue: null
+    description: NS-SLA-1
+
+Plans:
+  instantiatePlan:
+    planFile: ns-web-lb-instantiate.bpmn
+    getFile: /home/dpdk/code_phase_two/DesignFileCreate/web_lb_ns_design/user_upload_files/plans/ns-web-lb-instantiate.bpmn
+    description: instantiation plan

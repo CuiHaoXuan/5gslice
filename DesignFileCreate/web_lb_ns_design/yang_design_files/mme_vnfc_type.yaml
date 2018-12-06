@@ -1,0 +1,53 @@
+Info:
+  vnfcTypeId: MME-VNFC
+  vnfAffiliation:
+  - MME-HSS-VNF
+  version: 1.0.0
+  vendor: iaa
+  description: MME-VNFC
+DeploymentArtifact:
+  imageInfo:
+    imageType: qcow
+    image: MME-VNFC_image.qcow
+    getFile: /home/dpdk/code_phase_two/DesignFileCreate/web_lb_ns_design/user_upload_files/vnfc_images/DB-VNFC_image.qcow
+  filePackInfo:
+    filePack: null
+    getFile: null
+    packType: null
+    rootDir: null
+DeploymentFlavorConstraints:
+  hostFlavorDesc:
+    vimType: openstack
+    vmFlavor:
+    - m1.tiny
+    osType: ubuntu14.04
+EndPoints:
+  MME-PORTAL:
+    description: MME-PORTAL
+ConfigurableProperties:
+  mme-public-addr:
+    valueType: string
+    defaultValue: null
+    description: mme-public-addr
+  spgw-public-addr:
+    valueType: string
+    defaultValue: null
+    description: spgw-remote-addr
+Interfaces:
+  MME-VNFC-configure:
+    scope: configure
+    order: 1
+    format: ./DB-VNFC-install.sh
+    absPath: /usr/local/interfaces/
+    description: DB-VNFC-install
+  MME-VNFC-start:
+    scope: start
+    order: 1
+    format: ./mme-start.sh
+    absPath: /usr/local/interfaces/
+    description: MME-VNFC-start
+  MME-VNFC-stop:
+    scope: stop
+    order: 1
+    format: ./mme-stop
+    absPath: /usr/local/interfaces/

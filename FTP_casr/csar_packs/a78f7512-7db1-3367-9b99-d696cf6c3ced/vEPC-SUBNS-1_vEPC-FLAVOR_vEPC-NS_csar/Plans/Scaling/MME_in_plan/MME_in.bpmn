@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <process id="scale_install" name="nginx_install" isExecutable="true">
+    <serviceTask id="web_installing" name="web_installing" activiti:expression="${ taskBean.action('slice_0', 'vnf0', 'vnfc1', 'install') }" activiti:resultVariableName="result"></serviceTask>
+    <serviceTask id="web_start" name="web_start" activiti:expression="${execution.setVariable('result', taskBean.action('slice_0',  'vnf0', 'vnfc1', 'install') )}"></serviceTask>
+    <serviceTask id="ftp_installing" name="ftp_installing" activiti:expression="${execution.setVariable('result', taskBean.action('slice_0','vnf0', 'vnfc1', 'install') )}"></serviceTask>
+    <serviceTask id="ftp_start" name="ftp_start" activiti:expression="${execution.setVariable('result', taskBean.action('slice_0',  'vnf0', 'vnfc1', 'install') )}"></serviceTask>
+    <startEvent id="startevent2" name="Start"></startEvent>
+    <sequenceFlow id="flow1" name="start" sourceRef="startevent2" targetRef="web_installing"></sequenceFlow>
+    <endEvent id="endevent2" name="End"></endEvent>
+    <sequenceFlow id="flow2" sourceRef="web_installing" targetRef="web_start"></sequenceFlow>
+    <sequenceFlow id="flow3" sourceRef="web_start" targetRef="ftp_installing"></sequenceFlow>
+    <sequenceFlow id="flow4" sourceRef="ftp_installing" targetRef="ftp_start"></sequenceFlow>
+    <serviceTask id="servicetask_finished" name="workflow_finished" activiti:expression="${execution.setVariable('result', workflowFinishedBean.RespondToSliceOM(result) ) }"></serviceTask>
+    <sequenceFlow id="flow6" sourceRef="servicetask_finished" targetRef="endevent2"></sequenceFlow>
+    <sequenceFlow id="flow7" sourceRef="ftp_start" targetRef="servicetask_finished"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_nginx_install">
+    <bpmndi:BPMNPlane bpmnElement="nginx_install" id="BPMNPlane_nginx_install">
+      <bpmndi:BPMNShape bpmnElement="web_installing" id="BPMNShape_web_installing">
+        <omgdc:Bounds height="60.0" width="100.0" x="80.0" y="220.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="web_start" id="BPMNShape_web_start">
+        <omgdc:Bounds height="60.0" width="100.0" x="210.0" y="220.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ftp_installing" id="BPMNShape_ftp_installing">
+        <omgdc:Bounds height="60.0" width="100.0" x="360.0" y="221.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ftp_start" id="BPMNShape_ftp_start">
+        <omgdc:Bounds height="60.0" width="100.0" x="490.0" y="220.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent2" id="BPMNShape_startevent2">
+        <omgdc:Bounds height="35.0" width="35.0" x="10.0" y="232.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent2" id="BPMNShape_endevent2">
+        <omgdc:Bounds height="35.0" width="35.0" x="760.0" y="233.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask_finished" id="BPMNShape_servicetask_finished">
+        <omgdc:Bounds height="60.0" width="100.0" x="630.0" y="220.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="45.0" y="249.0"></omgdi:waypoint>
+        <omgdi:waypoint x="80.0" y="250.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="14.0" width="22.0" x="45.0" y="249.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+        <omgdi:waypoint x="180.0" y="250.0"></omgdi:waypoint>
+        <omgdi:waypoint x="210.0" y="250.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="310.0" y="250.0"></omgdi:waypoint>
+        <omgdi:waypoint x="360.0" y="251.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+        <omgdi:waypoint x="460.0" y="251.0"></omgdi:waypoint>
+        <omgdi:waypoint x="490.0" y="250.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+        <omgdi:waypoint x="730.0" y="250.0"></omgdi:waypoint>
+        <omgdi:waypoint x="760.0" y="250.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+        <omgdi:waypoint x="590.0" y="250.0"></omgdi:waypoint>
+        <omgdi:waypoint x="630.0" y="250.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

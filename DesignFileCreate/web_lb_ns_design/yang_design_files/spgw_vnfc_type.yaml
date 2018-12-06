@@ -1,0 +1,50 @@
+Info:
+  vnfcTypeId: SPGW-VNFC
+  vnfAffiliation:
+  - MME-HSS-VNF
+  version: 1.0.0
+  vendor: iaa
+  description: SPGW-VNFC
+DeploymentArtifact:
+  imageInfo:
+    imageType: qcow
+    image: SPGW-VNFC_image.qcow
+    getFile: /home/dpdk/code_phase_two/DesignFileCreate/web_lb_ns_design/user_upload_files/vnfc_images/SPGW-VNFC_image.qcow
+  filePackInfo:
+    filePack: null
+    getFile: null
+    packType: null
+    rootDir: null
+DeploymentFlavorConstraints:
+  hostFlavorDesc:
+    vimType: openstack
+    vmFlavor:
+    - m1.tiny
+    osType: ubuntu14.04
+EndPoints:
+  SPGW-PORTAL:
+    description: SPGW-PORTAL
+ConfigurableProperties:
+  spgw-addr:
+    valueType: string
+    defaultValue: null
+    description: spgw-public-addr
+  
+Interfaces:
+  SPGW-VNFC-configure:
+    scope: configure
+    order: 1
+    format: ./spgw-set-addr.sh -n {{spgw-addr}}/24
+    absPath: /usr/local/interfaces/
+    description: SPGW-VNFC-install
+  SPGW-VNFC-start:
+    scope: start
+    order: 1
+    format: ./spgw-start.sh
+    absPath: /usr/local/interfaces/
+    description: SPGW-VNFC-start
+  SPGW-VNFC-stop:
+    scope: stop
+    order: 1
+    format: ./spgw-stop
+    absPath: /usr/local/interfaces/

@@ -1,0 +1,31 @@
+tosca_definitions_version: tosca_simple_profile_for_nfv_1_0
+description: LB-WEB-NS:LB-WEB-FLAVOR
+metadata:
+  id: LB-WEB-NS_LB-WEB-FLAVOR
+  vendor: iaa
+  version: 1.0.0
+imports:
+- DB-NODE-vnfd.yaml
+- LB-WEB-NODE-vnfd.yaml
+topology_template:
+  node_templates:
+    VNF_{{DB-NODE}}:
+      type: tosca.nodes.nfv.VNF.DB-NODE
+      requirements:
+        virtualLink_{{DB-ENDPOINT}}:
+        - VL_{{VNF-CONNECTION-WEB-DB}}
+    VNF_{{LB-WEB-NODE}}:
+      type: tosca.nodes.nfv.VNF.LB-WEB-NODE
+      requirements:
+        virtualLink_{{NGINX-ENDPOINT}}:
+        - VL_{{LB-ENDPOINT}}
+        virtualLink_{{WEB-ENDPOINT}}:
+        - VL_{{VNF-CONNECTION-WEB-DB}}
+    CP_{{LB-ENDPOINT}}:
+      type: tosca.nodes.nfv.CP
+      requirements:
+        virtualLink: VL_{{LB-ENDPOINT}}
+    VL_{{LB-ENDPOINT}}:
+      type: tosca.nodes.nfv.VL.ELine
+    VL_{{VNF-CONNECTION-WEB-DB}}:
+      type: tosca.nodes.nfv.VL.ELine

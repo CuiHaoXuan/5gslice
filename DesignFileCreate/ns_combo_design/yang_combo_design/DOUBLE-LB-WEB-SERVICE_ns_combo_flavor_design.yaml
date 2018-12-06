@@ -1,0 +1,28 @@
+Info:
+  nsComboFlavorId: vEPC_SLICE
+  version: 1.0.0
+  vendor: iaa
+  description: vEPC with mme hss spgw
+SubNsFlavors:
+  vEPC-SUBNS-1:
+    nsTypeId: vEPC
+    nsFlavorId: vEPC-FLAVOR
+EndPoints:
+  vEPC-SUBNS-1-ENDPOINT:
+    subNsNodeId: vEPC-SUBNS-1
+    nsEndPointId: vEPC-ENDPOINT
+    description: vEPC-SUBNS-1-ENDPOINT
+Connections: {}
+ServiceLevelAgreementFlavors:
+  ns-combo-sla-1:
+    valueType: num
+    description: ns-combo-sla-1
+    value: 100
+LocationAwareness:
+  vnfLocations:
+    vEPC-SUBNS-1:
+      SPGW-NODE:
+        locationDescription: SPGW-NODE@vEPC-SUBNS-1
+      MME-HSS-NODE:
+          locationDescription: MME-HSS-NODE@vEPC-SUBNS-1
+  referencePoints: {}

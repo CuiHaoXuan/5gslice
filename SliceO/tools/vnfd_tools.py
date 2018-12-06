@@ -1,0 +1,73 @@
+#   tools for vnfd processing
+
+
+from collections import OrderedDict
+
+from common.util import VNF_MGMT_AGENT_VIM_TYPE, VNF_MGMT_AGENT_FLAVOR_TYPE, VNF_MGMT_AGENT_OS_TYPE
+
+
+class VnfdTool(object):
+
+    def __init__(self, vnfd):
+
+        self.vnfd = vnfd
+        self.vnf_nid = vnfd['metadata']['id']
+
+    def add_mgmt_agent_res(self):
+    
+        '''
+        add management agent host resource and related cp and internal vl
+
+        '''
+    #   add management agent info to the vnf node type requirements
+        loc = self.vnfd['node_types']['tosca.nodes.nfv.VNF.' + self.vnf_nid]['requirements']
+        loc = loc.setdefault('virtualLink_mgmtAgent', OrderedDict())
+        loc['capability'] = 'tosca.capabilities.nfv.VirtualLinkable'
+        loc['relationship'] = 'tosca.relationships.nfv.VirtualLinksTo'
+
+    #   add management agent info to the substitution mappings requirements
+        loc = self.vnfd['topology_template']['substitution_mappings']['requirements']
+        loc['virtualLink_mgmtAgent'] = '[CP_mgmtAgent, virtualLink]'
+
+    #   add management agent host vdu
+        loc = self.vnfd['topology_template']['node_templates']
+        loc = loc.setdefault('VDU_mgmtAgent', OrderedDict())
+        self.mgmt_agent_vdu_id = 'VDU_mgmtAgent'
+        loc['type'] = 'tosca.nodes.nfv.VDU.Customized'
+        loc = loc.setdefault('properties', OrderedDict())
+        loc['vim_type'], loc['flavor_type'], loc['os_type'] = \
+        VNF_MGMT_AGENT_VIM_TYPE, VNF_MGMT_AGENT_FLAVOR_TYPE, VNF_MGMT_AGENT_OS_TYPE
+
+    #   add internal vl of management private network for configuring vnfc nodes
+        loc = self.vnfd['topology_template']['node_templates']
+        loc = loc.setdefault('internal_VL_mgmt', OrderedDict())
+        self.mgmt_internal_vl_id = 'internal_VL_mgmt'
+        loc['type'] = 'tosca.nodes.nfv.VL.ELAN'
+    
+    #   add cp for managing endpoint for the management agent host
+        loc = self.vnfd['topology_template']['node_templates']
+        loc = loc.setdefault('CP_mgmtAgent', OrderedDict())
+        self.mgmt_agent_cp_id = 'CP_mgmtAgent'
+        loc['type'] = 'tosca.nodes.nfv.CP'
+        loc = loc.setdefault('requirements', OrderedDict())
+        loc['virtualLink'] = []
+        loc['virtualLink'].append(self.mgmt_internal_vl_id)
+        loc['virtualbinding'] = self.mgmt_agent_vdu_id
+
+    def add_vnfc_mgmt_cp_res(self, vnfc_nid, vdu_id):
+
+        '''
+        add management cp for vnfc node,
+        return the cp id
+
+        '''
+        loc = self.vnfd['topology_template']['node_templates']
+        loc = loc.setdefault('CP_mgmt_{{' + vnfc_nid + '}}', OrderedDict())
+        loc['type'] = 'tosca.nodes.nfv.CP'
+        loc = loc.setdefault('requirements', OrderedDict())
+        loc['virtualbinding'] = vdu_id
+        loc['virtualLink'] = []
+        loc['virtualLink'].append(self.mgmt_internal_vl_id)
+
+        return 'CP_mgmt_{{' + vnfc_nid + '}}'
+    

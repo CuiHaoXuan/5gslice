@@ -1,0 +1,49 @@
+Info:
+  vnfTypeId: SPGW-VNF
+  version: 1.0.0
+  vendor: iaa
+  description: SPGW-VNF
+VnfcNodes:
+  SPGW-NODE:
+    vnfcTypeId: SPGW-VNFC
+EndPoints:
+  SPGW-ENDPOINT:
+    vnfcNodeId: SPGW-NODE
+    vnfcEndPointId: SPGW-PORTAL
+    description: SPGW-NODE:SPGW-PORTAL
+Connections: {}
+VnfcPropertiesMapping: {}
+ServiceExposures: {}
+MonitorOptions:
+- monitorTargetSPGW:
+    format: '{{monitorConfigSPGW}}'
+    parameters:
+    - monitorConfigSPGW:
+        defaultValue: 'null'
+        function:
+        - type: REST
+          url: monitorConfigSPGW
+        script:
+          type: create_monitor_item
+          url: http://monitorServer/memory/availableMemory
+        target:
+        - SPGW-NODE
+        - SPGW-NODE
+        valueType: string
+    url: monitorTargetSPGW
+ScalingInfo:
+  scalingGroups:
+    SPGWGroup:
+      target: SPGW-NODE
+      min: '1'
+      max: '2'
+      defaultGroup: '1'
+  scalingOperations:
+    SPGWScaleOut:
+      scalingStep: '1'
+      targetGroup: SPGWGroup
+      description: SPGW scale out
+    SPGWScaleIn:
+      scalingStep: '-1'
+      targetGroup: SPGWGroup
+      description: SPGW scale in

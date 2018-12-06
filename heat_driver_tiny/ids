@@ -1,0 +1,317 @@
+{
+    "stack_name": "MME-HSS-VNF-2",
+    "parameter": {
+        "NetID": "66751736-619e-494b-837a-5c69c5cf3e6a"
+    },
+    "template": {
+        "outputs": {
+            "CP_{{MME-NODE}}_{{MME-PORTAL}}_privateIp": {
+                "value": {
+                    "get_attr": [
+                        "VDU_{{MME-NODE}}",
+                        "networks",
+                        "internal_VL_Net_private",
+                        0
+                    ]
+                }
+            },
+            "CP_mgmt_{{MME-NODE}}_privateIp": {
+                "value": {
+                    "get_attr": [
+                        "VDU_{{MME-NODE}}",
+                        "networks",
+                        "internal_VL_Net_private",
+                        0
+                    ]
+                }
+            },
+            "CP_{{MME-NODE}}_{{MME-PORTAL}}_publicIp": {
+                "value": {
+                    "get_attr": [
+                        "VDU_{{MME-NODE}}",
+                        "networks",
+                        "internal_VL_Net_private",
+                        1
+                    ]
+                }
+            },
+            "CP_mgmt_{{HSS-NODE}}_privateIp": {
+                "value": {
+                    "get_attr": [
+                        "VDU_{{HSS-NODE}}",
+                        "networks",
+                        "internal_VL_Net_private",
+                        0
+                    ]
+                }
+            },
+            "CP_{{HSS-NODE}}_{{HSS-PORTAL}}_privateIp": {
+                "value": {
+                    "get_attr": [
+                        "VDU_{{HSS-NODE}}",
+                        "networks",
+                        "internal_VL_Net_private",
+                        0
+                    ]
+                }
+            },
+            "CP_mgmtAgent_publicIp": {
+                "value": {
+                    "get_attr": [
+                        "VDU_mgmtAgent",
+                        "networks",
+                        "internal_VL_Net_private",
+                        1
+                    ]
+                }
+            },
+            "CP_mgmtAgent_privateIp": {
+                "value": {
+                    "get_attr": [
+                        "VDU_mgmtAgent",
+                        "networks",
+                        "internal_VL_Net_private",
+                        0
+                    ]
+                }
+            },
+            "CP_{{HSS-NODE}}_{{HSS-PORTAL}}_publicIp": {
+                "value": {
+                    "get_attr": [
+                        "VDU_{{HSS-NODE}}",
+                        "networks",
+                        "internal_VL_Net_private",
+                        1
+                    ]
+                }
+            }
+        },
+        "heat_template_version": "2016-10-14",
+        "description": "id is : MME-HSS-NODE vendor is : iaa metadata_version is : 1.0.0",
+        "parameters": {
+            "NetID": {
+                "default": "66751736-619e-494b-837a-5c69c5cf3e6a",
+                "type": "string"
+            }
+        },
+        "resources": {
+            "CP_{{HSS-NODE}}_public_ip": {
+                "type": "OS::Neutron::FloatingIP",
+                "properties": {
+                    "floating_network": {
+                        "get_param": "NetID"
+                    },
+                    "port_id": {
+                        "get_resource": "CP_{{HSS-NODE}}_public_private"
+                    }
+                }
+            },
+            "CP_{{HSS-NODE}}_public_private": {
+                "type": "OS::Neutron::Port",
+                "properties": {
+                    "fixed_ips": [
+                        {
+                            "subnet": {
+                                "get_resource": "internal_VL_Sub_private"
+                            }
+                        }
+                    ],
+                    "name": "CP_{{HSS-NODE}}_public_private",
+                    "network": {
+                        "get_resource": "internal_VL_Net_private"
+                    }
+                }
+            },
+ 	"CP_{{SPGW-NODE}}_public_private": {
+                "type": "OS::Neutron::Port",
+                "properties": {
+                    "fixed_ips": [
+                        {
+                            "subnet": {
+                                "get_resource": "internal_VL_Sub_private"
+                            }
+                        }
+                    ],
+                    "name": "CP_{{SPGW-NODE}}_public_private",
+                    "network": {
+                        "get_resource": "internal_VL_Net_private"
+                    }
+                }
+            },
+ 	"CP_{{SPGW-NODE}}_public_ip": {
+                "type": "OS::Neutron::FloatingIP",
+                "properties": {
+                    "floating_network": {
+                        "get_param": "NetID"
+                    },
+                    "port_id": {
+                        "get_resource": "CP_{{SPGW-NODE}}_public_private"
+                    }
+                }
+            },
+            "router_interface_public": {
+                "type": "OS::Neutron::RouterInterface",
+                "properties": {
+                    "router": {
+                        "get_resource": "router"
+                    },
+                    "subnet": {
+                        "get_resource": "internal_VL_Sub_private"
+                    }
+                }
+            },
+            "VDU_{{MME-NODE}}": {
+                "type": "OS::Nova::Server",
+                "properties": {
+                    "name": "VDU_{{MME-NODE}}",
+                    "key_name": "mykey",
+                    "image": "mme",
+                    "user_data": "#!/bin/sh\nsed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config\npasswd root <<EOF\n123\n123\nEOF\nservice ssh restart\n",
+                    "flavor": "m1.large",
+                    "networks": [
+                        {
+                            "port": {
+                                "get_resource": "CP_{{MME-NODE}}_public_private"
+                            }
+                        }
+                    ]
+                }
+            },
+            "VDU_{{HSS-NODE}}": {
+                "type": "OS::Nova::Server",
+                "properties": {
+                    "name": "VDU_{{HSS-NODE}}",
+                    "key_name": "mykey",
+                    "image": "hss",
+                    "user_data": "#!/bin/sh\nsed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config\npasswd root <<EOF\n123\n123\nEOF\nservice ssh restart\n",
+                    "flavor": "m1.large",
+                    "networks": [
+                        {
+                            "port": {
+                                "get_resource": "CP_{{HSS-NODE}}_public_private"
+                            }
+                        }
+                    ]
+                }
+            },
+	 "VDU_{{SPGW-NODE}}": {
+                "type": "OS::Nova::Server",
+                "properties": {
+                    "name": "VDU_{{SPGW-NODE}}",
+                    "key_name": "mykey",
+                    "image": "spgw",
+                    "user_data": "#!/bin/sh\ncp -f /home/ubuntu/.ssh/authorized_keys /root/.ssh/\nuseradd 5gslm\npasswd 5gslm <<EOF\niaa\niaa\nEOF\n",
+                    "flavor": "m1.large",
+                    "networks": [
+                        {
+                            "port": {
+                                "get_resource": "CP_{{SPGW-NODE}}_public_private"
+                            }
+                        }
+                    ]
+                }
+            },
+            "CP_mgmtAgent_public_ip": {
+                "type": "OS::Neutron::FloatingIP",
+                "properties": {
+                    "floating_network": {
+                        "get_param": "NetID"
+                    },
+                    "port_id": {
+                        "get_resource": "CP_mgmtAgent_public_private"
+                    }
+                }
+            },
+            "CP_{{MME-NODE}}_public_private": {
+                "type": "OS::Neutron::Port",
+                "properties": {
+                    "fixed_ips": [
+                        {
+                            "subnet": {
+                                "get_resource": "internal_VL_Sub_private"
+                            }
+                        }
+                    ],
+                    "name": "CP_{{MME-NODE}}_public_private",
+                    "network": {
+                        "get_resource": "internal_VL_Net_private"
+                    }
+                }
+            },
+            "internal_VL_Net_private": {
+                "type": "OS::Neutron::Net",
+                "properties": {
+                    "name": "internal_VL_Net_private"
+                }
+            },
+            "CP_{{MME-NODE}}_public_ip": {
+                "type": "OS::Neutron::FloatingIP",
+                "properties": {
+                    "floating_network": {
+                        "get_param": "NetID"
+                    },
+                    "port_id": {
+                        "get_resource": "CP_{{MME-NODE}}_public_private"
+                    }
+                }
+            },
+            "router": {
+                "type": "OS::Neutron::Router",
+                "properties": {
+                    "external_gateway_info": {
+                        "network": {
+                            "get_param": "NetID"
+                        }
+                    },
+                    "name": "MME-HSS-NODE_router"
+                }
+            },
+            "internal_VL_Sub_private": {
+                "type": "OS::Neutron::Subnet",
+                "properties": {
+                    "network_id": {
+                        "get_resource": "internal_VL_Net_private"
+                    },
+                    "ip_version": "4",
+                    "cidr": "172.168.5.0/24",
+                    "dns_nameservers": [
+                        "8.8.8.8"
+                    ]
+                }
+            },
+            "CP_mgmtAgent_public_private": {
+                "type": "OS::Neutron::Port",
+                "properties": {
+                    "fixed_ips": [
+                        {
+                            "subnet": {
+                                "get_resource": "internal_VL_Sub_private"
+                            }
+                        }
+                    ],
+                    "name": "CP_mgmtAgent_public_private",
+                    "network": {
+                        "get_resource": "internal_VL_Net_private"
+                    }
+                }
+            },
+            "VDU_mgmtAgent": {
+                "type": "OS::Nova::Server",
+                "properties": {
+                    "name": "VDU_mgmtAgent",
+                    "key_name": "mykey",
+                    "image": "hss",
+                    "user_data": "#!/bin/sh\nsed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config\npasswd root <<EOF\n123\n123\nEOF\nservice ssh restart\n",
+                    "flavor": "m1.large",
+                    "networks": [
+                        {
+                            "port": {
+                                "get_resource": "CP_mgmtAgent_public_private"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

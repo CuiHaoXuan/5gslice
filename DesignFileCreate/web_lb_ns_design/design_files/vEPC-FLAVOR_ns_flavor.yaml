@@ -1,0 +1,44 @@
+Info:
+  nsFlavorId: vEPC-FLAVOR
+  nsTypeId: vEPC-NS
+  version: 1.0.0
+  vendor: iaa
+  description: vEPC-NS:vEPC-FLAVOR
+ServiceLevelAgreementFlavors:
+  NS-SLA-1:
+    value: 100
+VnfcDeploymentFlavors:
+  SPGW-NODE:
+    SPGW-NODE:
+      vimType: openstack
+      vmFlavor: m1.large
+      osType: spgw
+  MME-HSS-NODE:
+    MME-NODE:
+      vimType: openstack
+      vmFlavor: m1.large
+      osType: mme
+    HSS-NODE:
+      vimType: openstack
+      vmFlavor: m1.large
+      osType: hss
+VnfcConfigurationFlavors:
+  SPGW-NODE:
+    SPGW-NODE:
+      spgw-private-addr:
+        value: '{{get_privateIp: SPGW-PORTAL}}'
+      spgw-public-addr:
+        value: '{{get_publicIp: SPGW-PORTAL}}'
+  MME-HSS-NODE:
+    MME-NODE:
+      mme-private-addr:
+        value: '{{get_privateIp: MME-PORTAL}}'
+      mme-public-addr:
+        value: '{{get_publicIp: MME-PORTAL}}'
+    HSS-NODE:
+      hss-private-addr:
+        value: '{{get_privateIp: HSS-PORTAL}}'
+      hss-public-addr:
+        value: '{{get_publicIp: HSS-PORTAL}}'
+VnfMonitorFlavors:
+  monitorConfigurationFlavors: {}

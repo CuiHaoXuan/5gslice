@@ -1,0 +1,58 @@
+JobUnitSequences:
+  slice_res_deploy_job_seq:
+    jobUnitList:
+    - phase: 0
+      jobUnits:
+      - gen_e2e_slice_res_ctx_job
+    paramMappings:
+    - phase: 0
+      mappings: {}
+    - phase: 1
+      mappings:
+        deploy_vnf_res_job:
+          slice_res_id:
+            phase: 0
+            jobUnit: gen_e2e_slice_res_ctx_job
+            para: slice_res_id
+    jobUnitClasses:
+      gen_e2e_slice_res_ctx_job:
+        module: e2e_res_mgr_job_units.gen_e2e_slice_res_ctx_job
+        class: E2ESliceResCtxGenerateJob
+      deploy_vnf_res_job:
+        module: e2e_res_mgr_job_units.deploy_vnf_res_job
+        class: VnfResDeployJob
+EventTypes:
+  slice_res_deploy_request: request to deploy a slice resource
+  slice_res_info_acquire: acquire the slice resource info
+EventProducerTypes:
+  local_rest_api: the local rest api of this component
+TaskSchedulerTypes:
+  slice_res_processor:
+    module: e2e_res_task_schedulers.slice_res_processor
+    class: SliceResProcessorScheduler
+    initType: INIT_TYPE_METHOD
+    initJobUnitSequence:
+    processedJobUnitSequences:
+    - slice_res_deploy_job_seq
+    processedEventTypes:
+    - slice_res_deploy_request
+    - slice_res_info_acquire
+    eventListenerListSyn: true
+Others:
+  localService:
+    name: e2eResourceMgr
+  remoteServices:
+    heatDriver-1:
+      servType: vimDriver
+      ip: 127.0.0.1
+      port: 8093
+      datacenters:
+      - core DC
+      - regional DC
+      services:
+        vnf_resource_deploy:
+          url: /5gslm/iaa/driver/heat/v1/vnf/management/create/json
+          method: POST
+        vnf_resource_acquire:
+          url: /5gslm/iaa/driver/heat/v1/vnf/<vnf_res_id>/resource/json
+          method: GET

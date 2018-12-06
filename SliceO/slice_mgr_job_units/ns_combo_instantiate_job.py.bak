@@ -1,0 +1,72 @@
+#   The class of the ns combo instantiation job unit
+
+
+import os
+import threadpool
+from collections import OrderedDict
+
+from common.util import get_class_func_name, CONTEXT_NAMESPACE_NS_COMBO, SUB_NS_INSTAN_THREADPOOL_SIZE
+#   from common.yaml_util import yaml_ordered_load as yaml_load
+from event_framework.job_unit import JobUnit
+from event_framework.event import META_EVENT_TYPE, META_EVENT_PRODUCER
+
+
+__author__ = 'chenxin'    
+__date__ = '2017-6-2'  
+__version__ = 1.0
+
+
+class NsComboInstantiateJob(JobUnit):
+    
+    '''
+    this job is used to instantiate the ns combo.
+    the works done by this job are:
+        call the sub slice instantiation service to instantiate each sub slice 
+    '''
+    
+    
+    def __init__(self, task_unit, job_n, **params):
+        
+        '''
+        params:
+            task_unit: the task unit instance this job unit belongs to
+            job_n: the name of this job given in the job unit sequence
+            params: other parameters may used for extension
+        '''
+        super(NsComboInstantiateJob, self).__init__(task_unit, job_n, **params)
+
+    def execute_job(self, **params):
+
+        '''
+        called by the task unit to start the execution of this job.
+        derived job unit class should override this method to deploy own processing logic
+
+        '''
+        try:
+            self.event = self.task_unit.get_triggered_event()
+            self.ns_combo_id = self.event.get_event_data().get('ns_combo_id', None)
+            r_data = {'status': 'instantiation request accepted'}
+            self.event.set_return_data_syn(r_data)
+            self._instantiate_subslices()
+            self._execution_finish()
+        except Exception, e:
+            print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)
+            self._execution_exception(Exception, e)
+
+    def _instantiate_subslices(self):
+
+        '''
+        instantiate each sub slice 
+
+        '''
+        sch = self.task_unit.task_scheduler
+        ctx_store = sch.context_store
+        ctx_h = ctx_store.get_context_item_process_handler(CONTEXT_NAMESPACE_NS_COMBO, self.ns_combo_id) 
+        sub_slice_info = ctx_h.get_context_item()['subSliceInfo']
+        ctx_h.process_finish()
+        tp = threadpool.ThreadPool(SUB_NS_INSTAN_THREADPOOL_SIZE)
+        for k, v in sub_slice_info.items():
+            req = threadpool.makeRequests(sch.req_subslice_instantiation_serv, [([v['relatedSubSliceId']], None)])
+            tp.putRequest(req[0])
+        

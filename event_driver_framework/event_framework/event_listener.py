@@ -1,0 +1,130 @@
+#   The class of the event listener
+
+
+from threading import Timer
+
+from common.util import get_class_func_name
+from event_matcher import EventMatcher
+
+
+__author__ = 'chenxin'    
+__date__ = '2017-3-30'  
+__version__ = 1.0
+
+EXPIRE_NEVER = 0
+EXPIRE_ONCE = 1
+
+
+class EventListener(object):
+    
+    def __init__(self, l_id, e_type, 
+                       e_matcher, expire=0, 
+                       timeout=None):
+        '''
+        params:
+            l_id: event listener id
+            e_type: listened event type
+            e_matcher: event matcher matching the listened event
+            expire:
+                0: current listener stays through the whole life cycle of the component
+                1: the listener will be removed once it is matched
+            timeout: the max life time of the listener when expire eqs 1
+        '''
+        self.listener_id = l_id
+        self.event_type = e_type
+        self.matcher = e_matcher
+        self.expire = expire
+        self.timeout = timeout
+
+    def get_listener_id(self):
+        return self.listener_id
+    
+    def match(self, event):
+        
+        '''
+        match the input event
+        return:
+            true: the input event match the current event listener
+            false: else
+        
+        '''
+        result = self.matcher.match(event.get_event_data(), event.get_event_meta())
+        if result:
+            self.event = event
+            print 'event listener: get a event with data: %s and meta: %s' % (event.get_event_data(), event.get_event_meta())
+        return result
+
+    def process_event(self):
+        
+        '''
+        process the event with match handler
+        
+        '''
+        self._on_match(self.event)
+
+    def get_listener_id(self):
+        return self.listener_id
+    
+    def start_timer(self):
+
+        '''
+        start the timer according to the timeout value
+
+        '''
+        if expire == 0:
+            return
+        if not timeout:
+            return
+        self.timer = Timer(timeout, self._on_timeout, [self])
+        self.timer.start()
+    
+    def stop_timer(self):
+        self.timer.stop()
+
+    def set_timeout_handler(self, callback, **params):
+
+        '''
+        set the handler to handle the listener timeout
+        params:
+            callback: the callback function called when the listener timeout
+            params: the params used when call the callback function
+        '''
+        self.timeout_handler = [callback, params]
+
+    
+    def _on_timeout(self):
+
+        '''
+        handler to handle the listener timeout
+
+        '''
+        try:
+            if timeout_handler[0]:
+                self.timeout_handler[0](listener=self, **self.timeout_handler[1])
+        except Exception, e:
+            print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)
+    
+    def set_match_handler(self, callback, **params):
+
+        '''
+        set the handler to handle the match event
+        params:
+            callback: the callback function called when the event is matched
+            params: the params used when call the callback function
+        '''
+        self.match_handler = [callback, params]
+    
+    def _on_match(self, event):
+
+        '''
+        called when the event is matched
+        callback function in match handler is called,
+        with 
+
+        '''
+        try:
+            self.match_handler[0](event=event, listener=self, **self.match_handler[1])
+        except Exception, e:
+            print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)

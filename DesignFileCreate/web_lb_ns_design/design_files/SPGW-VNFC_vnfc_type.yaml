@@ -1,0 +1,53 @@
+Info:
+  vnfcTypeId: SPGW-VNFC
+  vnfAffiliation:
+  - SPGW-VNF
+  version: 1.0.0
+  vendor: iaa
+  description: SPGW-VNFC
+DeploymentArtifact:
+  imageInfo:
+    imageType: qcow
+    image: spgw
+    getFile: /opt/code_phase_two/DesignFileCreate/web_lb_ns_design/user_upload_files/vnfc_images/spgw
+  filePackInfo:
+    filePack: null
+    getFile: null
+    packType: null
+    rootDir: null
+DeploymentFlavorConstraints:
+  hostFlavorDesc:
+    vimType: openstack
+    vmFlavor:
+    - m1.large
+EndPoints:
+  SPGW-PORTAL:
+    description: SPGW-PORTAL
+ConfigurableProperties:
+  spgw-private-addr:
+    valueType: string
+    defaultValue: null
+    description: spgw-private-addr
+  spgw-public-addr:
+    valueType: string
+    defaultValue: null
+    description: spgw-public-addr
+Interfaces:
+  spgw-set-addr:
+    scope: configure
+    order: 1
+    format: ./spgw-set-addr -i {{spgw-private-addr}}/24
+    absPath: /bin/
+    description: spgw-set-addr
+  spgw-start:
+    scope: start
+    order: 1
+    format: ./spgw-start
+    absPath: /bin/
+    description: spgw-start
+  spgw-stop:
+    scope: stop
+    order: 1
+    format: ./spgw-stop
+    absPath: /bin/
+    description: spgw-stop

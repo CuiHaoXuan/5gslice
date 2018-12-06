@@ -1,0 +1,57 @@
+Info:
+  vnfcTypeId: HSS-VNFC
+  vnfAffiliation:
+  - MME-HSS-VNF
+  version: 1.0.0
+  vendor: iaa
+  description: HSS-VNFC
+DeploymentArtifact:
+  imageInfo:
+    imageType: qcow
+    image: hss
+    getFile: /opt/code_phase_two/DesignFileCreate/web_lb_ns_design/user_upload_files/vnfc_images/hss
+  filePackInfo:
+    filePack: null
+    getFile: null
+    packType: null
+    rootDir: null
+DeploymentFlavorConstraints:
+  hostFlavorDesc:
+    vimType: openstack
+    vmFlavor:
+    - m1.large
+EndPoints:
+  HSS-PORTAL:
+    description: HSS-PORTAL
+ConfigurableProperties:
+  hss-public-addr:
+    valueType: string
+    defaultValue: null
+    description: hss-public-addr
+  mme-remote-addr:
+    valueType: string
+    defaultValue: null
+    description: mme-remote-addr
+  hss-private-addr:
+    valueType: string
+    defaultValue: null
+    description: hss-private-addr
+Interfaces:
+  hss-set-addr:
+    scope: configure
+    order: 1
+    format: ./hss-set-addr -n {{hss-private-addr}} -m {{mme-remote-addr}}
+    absPath: /bin/
+    description: hss-set-addr
+  hss-start:
+    scope: start
+    order: 1
+    format: ./hss-start
+    absPath: /bin/
+    description: hss-start
+  hss-stop:
+    scope: stop
+    order: 1
+    format: ./hss-stop
+    absPath: /bin/
+    description: hss-stop

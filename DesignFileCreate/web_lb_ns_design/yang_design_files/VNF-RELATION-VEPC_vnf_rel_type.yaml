@@ -1,0 +1,12 @@
+Info:
+  vnfRelationshipTypeId: VNF-RELATION-vEPC
+  relationshipStyle: connectTo
+  version: 1.0.0
+  vendor: iaa
+  description: MME-HSS-VNF:MME-ENDPOINT->SPGW-VNF:SPGW-ENDPOINT
+SourceEndType:
+    vnfTypeId: MME-HSS-VNF
+vnfEndPointId: MME-HSS-ENDPOINT
+TargetEndType:
+  vnfTypeId: SPGW-VNF
+  vnfEndPointId: SPGW-ENDPOINT

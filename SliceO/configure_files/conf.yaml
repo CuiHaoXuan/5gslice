@@ -1,0 +1,268 @@
+JobUnitSequences:
+  local_csar_upload_job_seq:
+    jobUnitList:
+    - phase: 0
+      jobUnits:
+      - csar_upload_request_accept_job
+    - phase: 1
+      jobUnits:
+      - generate_csar_context_job
+    paramMappings:
+    - phase: 0
+      mappings: {}
+    - phase: 1
+      mappings:
+        generate_csar_context_job:
+          csar_id:
+            phase: 0
+            jobUnit: csar_upload_request_accept_job
+            para: csar_id
+          csar_upload_dir:
+            phase: 0
+            jobUnit: csar_upload_request_accept_job
+            para: csar_upload_dir
+    jobUnitClasses:
+      csar_upload_request_accept_job:
+        module: slice_mgr_job_units.local_csar_upload_accept_job
+        class: LocalCsarUploadAcceptJob
+      generate_csar_context_job:
+        module: slice_mgr_job_units.gen_csar_context_job
+        class: CsarContextGenerateJob
+  csar_onboarding_job_seq:
+    jobUnitList:
+    - phase: 0
+      jobUnits:
+      - csar_onboarding_job
+    paramMappings:
+    - phase: 0
+      mappings: {}
+    jobUnitClasses:
+      csar_onboarding_job:
+        module: slice_mgr_job_units.csar_onboarding_job
+        class: CsarOnboardingJob
+  slice_instantiation_job_seq:
+    jobUnitList:
+    - phase: 0
+      jobUnits:
+      - gen_slice_res_ctx_job
+    - phase: 1
+      jobUnits:
+      - gen_slice_conf_ctx_job
+    - phase: 2
+      jobUnits:
+      - deploy_slice_res_job
+    - phase: 3
+      jobUnits:
+      - register_slice_intf_job
+    - phase: 4
+      jobUnits:
+      - register_slice_plan_job
+    - phase: 5
+      jobUnits:
+      - exec_slice_instan_plan_job
+    paramMappings:
+    - phase: 0
+      mappings: {}
+    - phase: 1
+      mappings:
+        gen_slice_conf_ctx_job:
+          slice_id:
+            phase: 0
+            jobUnit: gen_slice_res_ctx_job
+            para: slice_id
+    - phase: 2
+      mappings:
+        deploy_slice_res_job:
+          slice_id:
+            phase: 0
+            jobUnit: gen_slice_res_ctx_job
+            para: slice_id
+    - phase: 3
+      mappings:
+        register_slice_intf_job:
+          slice_id:
+            phase: 0
+            jobUnit: gen_slice_res_ctx_job
+            para: slice_id
+    - phase: 4
+      mappings:
+        register_slice_plan_job:
+          slice_id:
+            phase: 0
+            jobUnit: gen_slice_res_ctx_job
+            para: slice_id
+    - phase: 5
+      mappings:
+        exec_slice_instan_plan_job:
+          slice_id:
+            phase: 0
+            jobUnit: gen_slice_res_ctx_job
+            para: slice_id
+    jobUnitClasses:
+      gen_slice_res_ctx_job:
+        module: slice_mgr_job_units.gen_slice_res_ctx_job
+        class: SliceResCtxGenerateJob
+      gen_slice_conf_ctx_job:
+        module: slice_mgr_job_units.gen_slice_conf_ctx_job
+        class: SliceConfCtxGenerateJob
+      deploy_slice_res_job:
+        module: slice_mgr_job_units.deploy_slice_res_job
+        class: SliceResDeployJob
+      register_slice_intf_job:
+        module: slice_mgr_job_units.register_slice_intf_job
+        class: SliceIntfRegisterJob
+      register_slice_plan_job:
+        module: slice_mgr_job_units.register_slice_plan_job
+        class: SlicePlanRegisterJob
+      exec_slice_instan_plan_job:
+        module: slice_mgr_job_units.exec_slice_instan_plan_job
+        class: SliceInstanPlanExecJob
+  local_ns_combo_upload_job_seq:
+    jobUnitList:
+    - phase: 0
+      jobUnits:
+      - local_ns_combo_upload_job
+    paramMappings:
+    - phase: 0
+      mappings: {}
+    jobUnitClasses:
+      local_ns_combo_upload_job:
+        module: slice_mgr_job_units.local_ns_combo_upload_job
+        class: LocalNsComboUploadJob
+  ns_combo_onboarding_job_seq:
+    jobUnitList:
+    - phase: 0
+      jobUnits:
+      - ns_combo_onboarding_job
+    paramMappings:
+    - phase: 0
+      mappings: {}
+    jobUnitClasses:
+      ns_combo_onboarding_job:
+        module: slice_mgr_job_units.ns_combo_onboarding_job
+        class: NsComboOnboardingJob
+  ns_combo_instantiation_job_seq:
+    jobUnitList:
+    - phase: 0
+      jobUnits:
+      - ns_combo_instantiate_job
+    paramMappings:
+    - phase: 0
+      mappings: {}
+    jobUnitClasses:
+      ns_combo_instantiate_job:
+        module: slice_mgr_job_units.ns_combo_instantiate_job
+        class: NsComboInstantiateJob
+EventTypes:
+  local_ns_combo_upload_request: request to upload a ns combo pack from a local pack path
+  ns_combo_onboarding_request: request to onboard a ns combo
+  ns_combo_instantiation_request: request to instantiate a ns combo
+  ns_combo_info_acquire: acquire the information of all the csars or one csar
+  local_csar_upload_request: request to upload a csar from a local pack path
+  csar_onboarding_request: request to onboard a csar
+  csar_info_acquire: acquire the information of all the csars or one csar
+  slice_instantiation_request: request to instantiate a slice
+  slice_info_acquire: acquire the information of all the slices or one slice
+EventProducerTypes:
+  local_rest_api: the local rest api of this component
+TaskSchedulerTypes:
+  ns_combo_processor:
+    module: slice_mgr_task_schedulers.ns_combo_processor
+    class: NsComboProcessorScheduler
+    initType: INIT_TYPE_METHOD
+    initJobUnitSequence:
+    processedJobUnitSequences:
+    - local_ns_combo_upload_job_seq
+    - ns_combo_onboarding_job_seq
+    - ns_combo_instantiation_job_seq
+    processedEventTypes:
+    - local_ns_combo_upload_request
+    - ns_combo_onboarding_request
+    - ns_combo_instantiation_request
+    - ns_combo_info_acquire
+    eventListenerListSyn: true
+  csar_processor:
+    module: slice_mgr_task_schedulers.csar_processor
+    class: CsarProcessorScheduler
+    initType: INIT_TYPE_METHOD
+    initJobUnitSequence:
+    processedJobUnitSequences:
+    - local_csar_upload_job_seq
+    - csar_onboarding_job_seq
+    processedEventTypes:
+    - local_csar_upload_request
+    - csar_onboarding_request
+    - csar_info_acquire
+    eventListenerListSyn: true
+  slice_processor:
+    module: slice_mgr_task_schedulers.slice_processor
+    class: SliceProcessorScheduler
+    initType: INIT_TYPE_METHOD
+    initJobUnitSequence:
+    processedJobUnitSequences:
+    - slice_instantiation_job_seq
+    processedEventTypes:
+    - slice_instantiation_request
+    - slice_info_acquire
+    eventListenerListSyn: true
+Others:
+  localService:
+    servType: sliceMgr
+    ip: 127.0.0.1
+    port: 8090
+    services:
+      csar_upload:
+        url: /5gslm/iaa/sliceOM/v1/csar/upload/json
+        method: POST
+      csar_acquire:
+        url: /5gslm/iaa/sliceOM/v1/csar/info/json
+        method: POST
+      csar_onboarding:
+        url: /5gslm/iaa/sliceOM/v1/csar/<csar_id>/onboarding/json
+        method: POST
+      subslice_instantiation:
+        url: /5gslm/iaa/sliceOM/v1/subslice/<sub_slice_id>/lcm/instantiate/json
+        method: POST
+  remoteServices:
+    catalogue:
+      servType: catalogue
+      ip: 127.0.0.1
+      port: 21
+      username: root
+      password: iaa
+      protocal: ftp
+      catalogueDir:
+        csarPacks: 'csar_packs/'
+    e2eResourceMgr:
+      servType: e2eResourceMgr
+      ip: 127.0.0.1
+      port: 8092
+      services:
+        slice_resource_deploy:
+          url: /5gslm/iaa/e2eResOM/v1/slice/management/create/json
+          method: POST
+        slice_resource_acquire:
+          url: /5gslm/iaa/e2eResOM/v1/slice/<slice_res_id>/resource/json
+          method: GET
+    networkFunctionMgr:
+      servType: networkFunctionMgr
+      ip: 127.0.0.1
+      port: 5000
+      services:
+        slice_intf_register:
+          url: /5gslm/iaa/nfm/v1/interface/deployment/json
+          method: POST
+    planEngine:
+      servType: planEngine
+      ip: 10.10.28.15
+      port: 8080
+      services:
+        slice_plans_register:
+          url: /rest/5gslm/iaa/plan_engine/v1/repository/deployments
+          method: POST
+        slice_plans_acquire:
+          url: /rest/5gslm/iaa/plan_engine/v1/repository/process-definitions
+          method: GET
+        slice_instan_plan_exec:
+          url: /rest/5gslm/iaa/plan_engine/v1/runtime/process-instances
+          method: POST

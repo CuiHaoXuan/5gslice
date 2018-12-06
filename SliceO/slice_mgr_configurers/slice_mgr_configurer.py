@@ -1,0 +1,53 @@
+#   The class of the slice management configurer
+
+from collections import OrderedDict
+import os
+
+from common.util import get_class_func_name, CONF_FILE
+from SliceO.event_framework.configurer import Configurer
+
+
+__author__ = 'chenxin'    
+__date__ = '2017-4-13'  
+__version__ = 1.0
+
+class SliceMgrConfigurer(Configurer):
+    
+    '''
+    this configurer is used for configuration of the slice O&M service.
+    the endpoint info of other services like Catalogue, E2E Res O&M will be 
+    depicted in the Others section in the conf.yaml file, consists as:
+        remoteServices:
+            catalogue:
+                ip: 'the ip address of the catalogue server'
+                port: 'the port the catalogue service listened'
+                username: 'the username used to login the catalogue service'
+                password: 'the password used to login the catalogue service'
+                protocal: 'the transport protocal used for the uploading/downloading'
+                catalogueDir:
+                    csarPacks: ./csar_packs/
+    '''
+    
+    def __init__(self):
+        
+        f_p = os.path.join(*[os.getcwd(), CONF_FILE])
+        super(SliceMgrConfigurer, self).__init__(f_p)
+
+    def _init(self):
+        
+        '''
+        init method of the configurer, 
+        derived configurer class could override this method
+        
+        '''
+        pass
+
+    def get_catalogue_service_info(self):
+
+        '''
+        return the catalogue service info
+
+        '''
+        others = self.config_data.get('Others', {})
+        remote_servs =  others.get('remoteServices', {})
+        return remote_servs.get('catalogue', None)

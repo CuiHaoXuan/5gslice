@@ -1,0 +1,83 @@
+tosca_definitions_version: tosca_simple_profile_for_nfv_1_0
+description: LB-WEB-VNF
+metadata:
+  id: LB-WEB-NODE
+  vendor: iaa
+  version: 1.0.0
+node_types:
+  tosca.nodes.nfv.VNF.LB-WEB-NODE:
+    derived_from: tosca.nodes.nfv.VNF
+    requirements:
+      virtualLink_{{NGINX-ENDPOINT}}:
+        capability: tosca.capabilities. nfv.VirtualLinkable
+        relationship: tosca.relationships.nfv.VirtualLinksTo
+      virtualLink_{{WEB-ENDPOINT}}:
+        capability: tosca.capabilities. nfv.VirtualLinkable
+        relationship: tosca.relationships.nfv.VirtualLinksTo
+  tosca.nodes.nfv.VDU.Customized:
+    derived_from: tosca.nodes.nfv.VDU
+    properties:
+      vim_type:
+        type: string
+        description: vim type for the current vdu
+      flavor_type:
+        type: string
+        description: flavor type used in the vim type for the vdu
+      os_type:
+        type: string
+        description: os type for the current vdu
+      image_name:
+        type: string
+        description: image file name used for the vdu
+      image_location:
+        type: string
+        description: location of the image file
+topology_template:
+  inputs: {}
+  substitution_mappings:
+    node_type: tosca.nodes.nfv.VNF.LB-WEB-NODE
+    requirements:
+      virtualLink_{{NGINX-ENDPOINT}}: '[CP_{{NGINX-NODE}}_{{NGINX-PORTAL}}, virtualLink]'
+      virtualLink_{{WEB-ENDPOINT}}: '[CP_{{WEB-NODE}}_{{WEB-PORTAL}}, virtualLink]'
+  node_templates:
+    VDU_{{NGINX-NODE}}:
+      type: tosca.nodes.nfv.VDU.Customized
+      properties:
+        vim_type: openstack
+        flavor_type: m1.tiny
+        os_type: ubuntu14.04
+        image_name: NGINX-VNFC_image.qcow
+        image_location: null
+    VDU_{{WEB-NODE}}:
+      type: tosca.nodes.nfv.VDU.Customized
+      properties:
+        vim_type: openstack
+        flavor_type: m1.tiny
+        os_type: ubuntu14.04
+        image_name: WEB-VNFC_image.qcow
+        image_location: null
+    CP_{{NGINX-NODE}}_{{NGINX-PORTAL}}:
+      type: tosca.nodes.nfv.CP
+      requirements:
+        virtualbinding: VDU_{{NGINX-NODE}}
+        virtualLink:
+        - internal_VL_{{VNFC-CONNECTION-LB-WEB}}
+    CP_{{WEB-NODE}}_{{WEB-PORTAL}}:
+      type: tosca.nodes.nfv.CP
+      requirements:
+        virtualbinding: VDU_{{WEB-NODE}}
+        virtualLink:
+        - internal_VL_{{VNFC-CONNECTION-LB-WEB}}
+    internal_VL_{{VNFC-CONNECTION-LB-WEB}}:
+      type: tosca.nodes.nfv.VL.ELAN
+  policies:
+    SP_WEB-SERVER-SCALE-OUT:
+      type: tosca.policies.Scaling
+      properties:
+        increment: 1
+        cooldown: 60
+        min_instances: 1
+        max_instances: 4
+        default_instances: 2
+        targets:
+        - VDU_{{WEB-NODE}}

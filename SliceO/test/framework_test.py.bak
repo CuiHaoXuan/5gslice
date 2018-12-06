@@ -1,0 +1,35 @@
+#   main test for the event framework
+
+import time
+
+from test_configurers.test_configurer import TestConfigurer
+from event_framework.context_store import ContextStore
+
+
+if __name__ == '__main__':
+
+    conf = TestConfigurer()
+    ctx_store = ContextStore()
+    t_sch = conf.get_task_scheduler_instance('test_data_processor', ctx_store)
+    e_t_1 = conf.get_event_type('get_test_data_event')
+    e_p_1 = conf.get_event_producer('test_data_consumer')
+    e_data_1 = {'context_namespace': 'test data'}
+    e_t_2 = conf.get_event_type('add_test_data_event')
+    e_p_2 = conf.get_event_producer('test_data_producer')
+    e_data_2 = {'context_namespace': 'test data', 'data': { 'name': 'test data item 3', 'data': '!'}}
+    e_t_3 = conf.get_event_type('clear_test_data_event')
+    e_p_3 = conf.get_event_producer('test_data_producer')
+    e_data_3 = {}
+    for i in range(0, 1):
+        event_1 = t_sch.event_generator.get_event(e_t_1, e_p_1, e_data_1)
+        event_1.trigger_event()
+        event_2 = t_sch.event_generator.get_event(e_t_2, e_p_2, e_data_2)
+        time.sleep(0.1)
+        print 'event ', i
+        print event_2.trigger_event()
+        time.sleep(0.1)
+        event_3 = t_sch.event_generator.get_event(e_t_3, e_p_3, e_data_3)
+        event_3.trigger_event()
+        #print 'namespaces: ', ctx_store.get_all_context_namespaces()
+        print '***********************************'
+    time.sleep(5)

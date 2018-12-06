@@ -1,0 +1,38 @@
+resources:
+  server_scaling_group:
+    type: OS::Heat::AutoScalingGroup
+    condition : none
+    properties:
+      min_size: 1
+      max_size: 3
+      desired_capacity: 1
+      resource:
+          type: yaml
+          properties:
+              public_net :  { get_param : public_net }
+
+  server_scaling_up_policy:
+    type: OS::Heat::ScalingPolicy
+    condition : none
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: { get_resource: server_scaling_group }
+      cooldown: 60
+      scaling_adjustment: 1
+
+  server_scaling_down_policy:
+    type: OS::Heat::ScalingPolicy
+    condition : none
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: { get_resource: server_scaling_group }
+      cooldown: 60
+      scaling_adjustment: -1
+
+outputs:
+  scaling_up_url:
+    value: { get_attr: [ server_scaling_up_policy, signal_url ] }
+    condition : none
+  scaling_down_url:
+    value: { get_attr: [ server_scaling_down_policy, signal_url ] }
+    condition : none

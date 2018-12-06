@@ -1,0 +1,53 @@
+Info:
+  vnfcTypeId: HSS-VNFC
+  vnfAffiliation:
+      - MME-HSS-VNF
+  version: 1.0.0
+  vendor: iaa
+  description: HSS-VNFC
+DeploymentArtifact:
+  imageInfo:
+    imageType: qcow
+    image: HSS-VNFC_image.qcow
+    getFile: /home/dpdk/code_phase_two/DesignFileCreate/web_lb_ns_design/user_upload_files/vnfc_images/HSS-VNFC_image.qcow
+  filePackInfo:
+    filePack: null
+    getFile: null
+    packType: null
+    rootDir: null
+DeploymentFlavorConstraints:
+  hostFlavorDesc:
+    vimType: openstack
+    vmFlavor:
+    - m1.tiny
+    osType: ubuntu14.04
+EndPoints:
+  HSS-PORTAL:
+    description: HSS-PORTAL
+ConfigurableProperties:
+  hss-addr:
+    valueType: string
+    defaultValue: null
+    description: hss-public-addr
+  mme-addr:
+    valueType: string
+    defaultValue: null
+    description: remote-addr
+Interfaces:
+  HSS-VNFC-configure:
+    scope: configure
+    order: 1
+    format: ./hss-set-addr.sh -n {{hss-addr}} -m {{mme-addr}}
+    absPath: /usr/local/interfaces/
+    description: HSS-VNFC-install
+  HSS-VNFC-start:
+    scope: start
+    order: 1
+    format: ./hss-start.sh
+    absPath: /usr/local/interfaces/
+    description: HSS-VNFC-start
+  HSS-VNFC-stop:
+    scope: stop
+    order: 1
+    format: ./hss-stop
+    absPath: /usr/local/interfaces/

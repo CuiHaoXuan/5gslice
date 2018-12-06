@@ -1,0 +1,174 @@
+#   The class of the csar onboarding job unit
+
+
+import os
+
+from common.util import get_class_func_name, cata_download, del_dir_or_file, \
+                            CSAR_STATUS_ONBOARDING, CSAR_STATUS_ONBOARDED, \
+                            SLICE_STATUS_INIT, CONTEXT_NAMESPACE_SLICE, CONTEXT_NAMESPACE_CSAR
+from common.yaml_util import yaml_ordered_load as yaml_load, yaml_ordered_dump as yaml_dump
+from event_framework.job_unit import JobUnit
+from event_framework.event import META_EVENT_TYPE, META_EVENT_PRODUCER
+
+
+__author__ = 'chenxin'    
+__date__ = '2017-4-16'  
+__version__ = 1.0
+
+
+
+class CsarOnboardingJob(JobUnit):
+    
+    '''
+    this job is used to onboaring a csar.
+    the works done by this job are:
+        download the meta data from the catalogue and read
+        allocate the slice id for the onboarded csar
+        generate and store the slice context
+        return the slice id and information
+        update the csar status in context
+    '''
+    
+    
+    def __init__(self, task_unit, job_n, **params):
+        
+        '''
+        params:
+            task_unit: the task unit instance this job unit belongs to
+            job_n: the name of this job given in the job unit sequence
+            params: other parameters may used for extension
+        '''
+        super(CsarOnboardingJob, self).__init__(task_unit, job_n, **params)
+
+    def execute_job(self, **params):
+
+        '''
+        called by the task unit to start the execution of this job.
+        derived job unit class should override this method to deploy own processing logic
+
+        '''
+        try:
+            self.event = self.task_unit.get_triggered_event()
+            self.csar_id = self.event.get_event_data().get('csar_id', None)
+            self._update_csar_onboarding()
+            self._alloc_slice_id()
+            r_data = {'status': 'request accepted'}
+            r_data.update({'allocSliceId': self.slice_id})
+            self.event.set_return_data_syn(r_data)
+	    print "csar execute"
+            self._download_csar_meta()
+            self._gen_slice_context()
+            self._update_csar_onboarded
+            self._execution_finish()
+        except Exception, e:
+            print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)
+            self.event.set_return_data_asyn({'status': 'request failed'})
+            self._execution_exception(Exception, e)
+    
+    def _update_csar_onboarding(self):
+
+        '''
+        change the csar status to on-boarding in the context
+
+        '''
+        ctx_store = self.task_unit.task_scheduler.context_store
+        ctx_h = ctx_store.get_context_item_process_handler(CONTEXT_NAMESPACE_CSAR, self.csar_id)
+        ctx_h.get_context_item()['status'] = CSAR_STATUS_ONBOARDING
+        ctx_h.process_finish()
+    
+    def _alloc_slice_id(self):
+        
+        '''
+        allocate the csar id according to the csar name, tenant id and the trade id
+
+        '''
+        id_gen = self.task_unit.task_scheduler.global_id_generator
+        ctx_store = self.task_unit.task_scheduler.context_store
+        ctx_h = ctx_store.get_context_item_process_handler(CONTEXT_NAMESPACE_CSAR, self.csar_id)
+        ctx = ctx_h.get_context_item()
+        self.csar_cata_dir = ctx.get('catalogueDir', None)
+        self.ns_combo_id = ctx.get('nsComboId', None)
+        self.sub_ns_nid = ctx.get('subNsNodeId', None)
+        self.meta_cata_path = os.path.join(self.csar_cata_dir, 'Metadata', 'metadata.yaml')
+        self.slice_id = self.sub_ns_nid
+        #   self.slice_id = id_gen.get_context_item_id_without_env(self.csar_id, 
+        #                                              ctx.get('nsTypeId', ''), 
+        #                                              ctx.get('nsFlavorId', ''),
+        #                                              ctx.get('tenantId', ''), 
+        #                                              ctx.get('tradeId', ''))
+        ctx_h.process_finish()
+    
+    def _download_csar_meta(self):
+
+        '''
+        download the csar meta data from catalogue
+
+        '''
+        if not os.path.exists('download_tmp'):
+            os.mkdir('download_tmp')
+        cur_dir = os.path.abspath(os.getcwd())
+        os.chdir('download_tmp')
+        if os.path.exists(self.csar_id):
+            os.system('rm -r ' + self.csar_id)
+        os.mkdir(self.csar_id)
+
+        self.meta_local_dir = os.path.abspath(self.csar_id)
+        
+        os.chdir(self.csar_id)
+        os.mknod('metadata.yaml')
+        
+        self.meta_local_path = os.path.abspath('metadata.yaml')
+        
+        os.chdir(cur_dir)
+        
+        sch = self.task_unit.task_scheduler
+        ip_addr = sch.get_catalogue_serv_ip()
+        t_port = sch.get_catalogue_serv_port()
+        pro = sch.get_catalogue_serv_proto()
+        usr = sch.get_catalogue_serv_username()
+        passwd = sch.get_catalogue_serv_password()
+        cata_download(ip_addr, t_port, pro, usr, passwd, 
+                             self.meta_local_path, self.meta_cata_path)
+    
+    def _gen_slice_context(self):
+
+        '''
+        generate slice context info, which consists with:
+            status:
+            relatedCsarId:
+            csarCataDir:
+            metadata:
+            nsComboId:
+            subNsNodeId:
+            sliceId:
+
+        '''
+        f = file(self.meta_local_path, 'rb')
+        self.slice_meta = yaml_load(f)
+        print '#### CsarOnboardingJob: init a slice with slice id: ' + self.slice_id
+        #   print yaml_dump(self.slice_meta, default_flow_style=False)
+        slice_ctx = {'status': SLICE_STATUS_INIT}
+        slice_ctx.update({'relatedCsarId': self.csar_id})
+        slice_ctx.update({'csarCataDir': self.csar_cata_dir})
+        slice_ctx.update({'metadata': self.slice_meta})
+        slice_ctx.update({'nsComboId': self.ns_combo_id})
+        slice_ctx.update({'subNsNodeId': self.sub_ns_nid})
+        ctx_store = self.task_unit.task_scheduler.context_store
+        ctx_store.add_context_item(slice_ctx, CONTEXT_NAMESPACE_SLICE, 
+                                   self.slice_id, item_id_n='sliceId')
+        f.close()
+        del_dir_or_file(self.meta_local_dir)
+    
+    def _update_csar_onboarded(self):
+
+        '''
+        change the csar status to on-boarded and add the related slice id in the context
+
+        '''
+        ctx_store = self.task_unit.task_scheduler.context_store
+        ctx_h = ctx_store.get_context_item_process_handler(CONTEXT_NAMESPACE_CSAR, self.csar_id)
+        ctx = ctx_h.get_context_item()
+        ctx['status'] = CSAR_STATUS_ONBOARDED
+        ctx['relatedSliceId'] = self.slice_id
+        ctx_h.process_finish()

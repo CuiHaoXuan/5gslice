@@ -1,0 +1,112 @@
+#   The class of the configurer
+
+import os
+import yaml
+import importlib as ipl
+from collections import OrderedDict
+
+from common.util import get_class_func_name
+from common.yaml_util import yaml_ordered_load as yaml_load
+from job_unit_sequence import JobUnitSequence
+
+
+__author__ = 'chenxin'    
+__date__ = '2017-4-8'  
+__version__ = 1.0
+
+if hasattr(yaml, 'CSafeLoader'):
+    yaml_loader = yaml.CSafeLoader
+else:
+    yaml_loader = yaml.SafeLoader
+
+class Configurer(object):
+    
+    def __init__(self, conf_file=None):
+        
+        '''
+        load the configure file and complete the configuration
+        params:
+            conf_file: local file path of the configure file
+        '''
+        try:
+            if conf_file:
+                tmp, ext = os.path.splitext(conf_file)
+                if not ext == '.yaml':
+                    raise Exception('the configure file is required to be a yaml file')
+                self.config_file = os.path.abspath(conf_file)
+                f = file(conf_file, 'r')
+                self.config_data = yaml_load(f, yaml_loader) 
+            self._init()
+            self._gen_job_unit_seq_dict()
+        except Exception, e:
+            print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)
+
+    def _init(self):
+        
+        '''
+        init method of the configurer, 
+        derived configurer class could override this method
+        
+        '''
+        pass
+
+    def _gen_job_unit_seq_dict(self):
+
+        '''
+        generate a dict containing the job unit sequences
+        descripted in config_data
+
+        '''
+        self.job_unit_seq_dict = OrderedDict()
+        d = self.job_unit_seq_dict
+        for k, v in self.config_data['JobUnitSequences'].items():
+            seq = JobUnitSequence()
+            seq.set_job_unit_name_sequence(v['jobUnitList'])
+            seq.set_param_mapping_sequence(v['paramMappings'])
+            seq.set_job_unit_class_imports(v['jobUnitClasses'])
+            self.job_unit_seq_dict[k] = seq
+
+    def get_task_scheduler_instance(self, scheduler_name, ctx_store):
+
+        '''
+        get a task scheduler instance according to the name
+
+        '''
+        sch = self.config_data['TaskSchedulerTypes'].get(scheduler_name, None)
+        if not sch:
+            return None
+        try:
+            m = ipl.import_module(sch['module'])
+            cls = getattr(m, sch['class'])
+            init_t = sch['initType']
+            init_seq_name = sch['initJobUnitSequence']
+            if init_seq_name:
+                init_job_seq = self.get_job_unit_sequence(init_seq_name)
+            else:
+                init_job_seq = None
+            e_listener_list_syn = sch['eventListenerListSyn']
+            conf = {'job_unit_sequences': {}, \
+                    'processed_event_types': {}, \
+                    'global_event_producers': self.config_data['EventProducerTypes']}
+            for n in sch['processedJobUnitSequences']:
+                conf['job_unit_sequences'][n] = self.get_job_unit_sequence(n)
+            for n in sch['processedEventTypes']:
+                conf['processed_event_types'][n] = self.get_event_type(n)
+            return cls(conf, ctx_store, init_t, init_job_seq, e_listener_list_syn, self.config_data.get('Others', {}))
+        except Exception, e:
+            print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)
+            return None
+            
+    def get_job_unit_sequence(self, seq_name):
+        return self.job_unit_seq_dict.get(seq_name, None)
+    
+    def get_event_type(self, type_name):
+        return self.config_data['EventTypes'].get(type_name, None)
+
+    def get_event_producer(self, producer_name):
+        return self.config_data['EventProducerTypes'].get(producer_name, None)
+
+    def get_other_config_data(self):
+        return self.config_data.get('Others', None)

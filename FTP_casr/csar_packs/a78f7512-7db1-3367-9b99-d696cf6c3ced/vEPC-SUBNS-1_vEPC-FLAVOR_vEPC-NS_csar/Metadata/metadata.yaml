@@ -1,0 +1,423 @@
+nsFlavorInfo:
+  nsFlavorId: vEPC-FLAVOR
+  nsTypeId: vEPC-NS
+  version: 1.0.0
+  vendor: iaa
+  description: vEPC-NS:vEPC-FLAVOR
+slaInfo: {}
+locationInfo:
+  referencePoints: {}
+topologyInfo:
+  vnfInfo:
+    SPGW-NODE:
+      vnfTypeId: SPGW-VNF
+      vnfcInfo:
+        SPGW-NODE:
+          vnfcTypeId: SPGW-VNFC
+      connectionInfo: {}
+      endPointInfo:
+        SPGW-ENDPOINT:
+          vnfcNodeId: SPGW-NODE
+          vnfcEndPointId: SPGW-PORTAL
+    MME-HSS-NODE:
+      vnfTypeId: MME-HSS-VNF
+      vnfcInfo:
+        MME-NODE:
+          vnfcTypeId: MME-VNFC
+        HSS-NODE:
+          vnfcTypeId: HSS-VNFC
+      connectionInfo:
+        VNFC-CONNECTION-MME-HSS:
+          endOne:
+            vnfcNodeId: MME-NODE
+            vnfcEndPointId: MME-PORTAL
+          endTwo:
+            vnfcNodeId: HSS-NODE
+            vnfcEndPointId: HSS-PORTAL
+      endPointInfo:
+        MME-ENDPOINT:
+          vnfcNodeId: MME-NODE
+          vnfcEndPointId: MME-PORTAL
+        HSS-ENDPOINT:
+          vnfcNodeId: HSS-NODE
+          vnfcEndPointId: HSS-PORTAL
+  connectionInfo:
+    VNF-CONNECTION-vEPC:
+      endOne:
+        vnfNodeId: MME-HSS-NODE
+        vnfEndPointId: MME-ENDPOINT
+      endTwo:
+        vnfNodeId: SPGW-NODE
+        vnfEndPointId: SPGW-ENDPOINT
+  endPointInfo:
+    vEPC-ENDPOINT:
+      vnfNodeId: SPGW-NODE
+      vnfEndPointId: SPGW-ENDPOINT
+nsdInfo:
+  nsdFile: vEPC-NS-vEPC-FLAVOR_nsd.yaml
+  csarFilePath: Definitions/vEPC-NS-vEPC-FLAVOR_nsd.yaml
+vnfdInfo:
+  SPGW-NODE:
+    vnfdFile: SPGW-NODE_vnfd.yaml
+    csarFilePath: Definitions/SPGW-NODE_vnfd.yaml
+  MME-HSS-NODE:
+    vnfdFile: MME-HSS-NODE_vnfd.yaml
+    csarFilePath: Definitions/MME-HSS-NODE_vnfd.yaml
+resourceInfo:
+  nsResInfo:
+    vnfResInfo:
+      SPGW-NODE:
+        nsdVnfNodeId: VNF_{{SPGW-NODE}}
+        vnfcResInfo:
+          SPGW-NODE:
+            vduId: VDU_{{SPGW-NODE}}
+            vnfcEndPointResInfo:
+              SPGW-PORTAL:
+                cpId: CP_{{SPGW-NODE}}_{{SPGW-PORTAL}}
+        vnfEndPointResInfo:
+          SPGW-ENDPOINT:
+            relatedCpId: CP_{{SPGW-NODE}}_{{SPGW-PORTAL}}
+            relatedVduId: VDU_{{SPGW-NODE}}
+        vnfScalingPolicyInfo:
+          SPGWScaleOut:
+            vnfdSpId: SP_SPGWScaleOut_{{SPGW-NODE}}_OUT
+            targetVnfcNodeIdList:
+            - SPGW-NODE
+            targetVduIdList:
+            - VDU_{{SPGW-NODE}}
+          SPGWScaleIn:
+            vnfdSpId: SP_SPGWScaleIn_{{SPGW-NODE}}_IN
+            targetVnfcNodeIdList:
+            - SPGW-NODE
+            targetVduIdList:
+            - VDU_{{SPGW-NODE}}
+      MME-HSS-NODE:
+        nsdVnfNodeId: VNF_{{MME-HSS-NODE}}
+        vnfcResInfo:
+          MME-NODE:
+            vduId: VDU_{{MME-NODE}}
+            vnfcEndPointResInfo:
+              MME-PORTAL:
+                cpId: CP_{{MME-NODE}}_{{MME-PORTAL}}
+          HSS-NODE:
+            vduId: VDU_{{HSS-NODE}}
+            vnfcEndPointResInfo:
+              HSS-PORTAL:
+                cpId: CP_{{HSS-NODE}}_{{HSS-PORTAL}}
+        vnfEndPointResInfo:
+          MME-ENDPOINT:
+            relatedCpId: CP_{{MME-NODE}}_{{MME-PORTAL}}
+            relatedVduId: VDU_{{MME-NODE}}
+          HSS-ENDPOINT:
+            relatedCpId: CP_{{HSS-NODE}}_{{HSS-PORTAL}}
+            relatedVduId: VDU_{{HSS-NODE}}
+        vnfScalingPolicyInfo:
+          MMEScaleOut:
+            vnfdSpId: SP_MMEScaleOut_{{MME-NODE}}_OUT
+            targetVnfcNodeIdList:
+            - MME-NODE
+            targetVduIdList:
+            - VDU_{{MME-NODE}}
+          HSSScaleOut:
+            vnfdSpId: SP_HSSScaleOut_{{HSS-NODE}}_OUT
+            targetVnfcNodeIdList:
+            - HSS-NODE
+            targetVduIdList:
+            - VDU_{{HSS-NODE}}
+          MMEScaleIn:
+            vnfdSpId: SP_MMEScaleIn_{{MME-NODE}}_IN
+            targetVnfcNodeIdList:
+            - MME-NODE
+            targetVduIdList:
+            - VDU_{{MME-NODE}}
+          HSSScaleIn:
+            vnfdSpId: SP_HSSScaleIn_{{HSS-NODE}}_IN
+            targetVnfcNodeIdList:
+            - HSS-NODE
+            targetVduIdList:
+            - VDU_{{HSS-NODE}}
+deploymentArtifactInfo:
+  SPGW-NODE:
+    SPGW-NODE:
+      filePackInfo:
+        filePack: null
+        packType: null
+        csarFilePath: DeploymentArtifacts/FilePacks/SPGW-NODE/SPGW-NODE/
+        deployRootDir: null
+      imageInfo:
+        imageFile: spgw
+        csarFilePath: DeploymentArtifacts/Images/SPGW-NODE/SPGW-NODE/spgw
+  MME-HSS-NODE:
+    MME-NODE:
+      filePackInfo:
+        filePack: null
+        packType: null
+        csarFilePath: DeploymentArtifacts/FilePacks/MME-HSS-NODE/MME-NODE/
+        deployRootDir: null
+      imageInfo:
+        imageFile: mme
+        csarFilePath: DeploymentArtifacts/Images/MME-HSS-NODE/MME-NODE/mme
+    HSS-NODE:
+      filePackInfo:
+        filePack: null
+        packType: null
+        csarFilePath: DeploymentArtifacts/FilePacks/MME-HSS-NODE/HSS-NODE/
+        deployRootDir: null
+      imageInfo:
+        imageFile: hss
+        csarFilePath: DeploymentArtifacts/Images/MME-HSS-NODE/HSS-NODE/hss
+parameterInfo:
+  SPGW-NODE:
+    SPGW-NODE:
+      independentParas:
+        spgw-private-addr:
+          value: '{{get_privateIp: SPGW-PORTAL}}'
+          isBuildInFunc: true
+        spgw-public-addr:
+          value: '{{get_publicIp: SPGW-PORTAL}}'
+          isBuildInFunc: true
+  MME-HSS-NODE:
+    MME-NODE:
+      dependentParas:
+        hss-remote-addr:
+          dependency:
+            vnfNodeId: MME-HSS-NODE
+            vnfcNodeId: HSS-NODE
+            propertyId: hss-public-addr
+            multiInstanceOption: true
+        spgw-remote-addr:
+          dependency:
+            vnfNodeId: SPGW-NODE
+            vnfcNodeId: SPGW-NODE
+            propertyId: spgw-public-addr
+            multiInstanceOption: false
+      independentParas:
+        mme-private-addr:
+          value: '{{get_privateIp: MME-PORTAL}}'
+          isBuildInFunc: true
+        mme-public-addr:
+          value: '{{get_publicIp: MME-PORTAL}}'
+          isBuildInFunc: true
+    HSS-NODE:
+      independentParas:
+        hss-private-addr:
+          value: '{{get_privateIp: HSS-PORTAL}}'
+          isBuildInFunc: true
+        hss-public-addr:
+          value: '{{get_publicIp: HSS-PORTAL}}'
+          isBuildInFunc: true
+      dependentParas:
+        mme-remote-addr:
+          dependency:
+            vnfNodeId: MME-HSS-NODE
+            vnfcNodeId: MME-NODE
+            propertyId: mme-public-addr
+            multiInstanceOption: true
+vnfcConfigInfo:
+  SPGW-NODE:
+    SPGW-NODE:
+      spgw-set-addr:
+        scope: configure
+        order: 1
+        format: ./spgw-set-addr -i {{spgw-private-addr}}/24
+        deployFileAbsPath: /bin/
+        involveParas:
+        - spgw-private-addr
+      spgw-start:
+        scope: start
+        order: 1
+        format: ./spgw-start
+        deployFileAbsPath: /bin/
+        involveParas: []
+      spgw-stop:
+        scope: stop
+        order: 1
+        format: ./spgw-stop
+        deployFileAbsPath: /bin/
+        involveParas: []
+  MME-HSS-NODE:
+    MME-NODE:
+      mme-set-addr:
+        scope: configure
+        order: 1
+        format: ./mme-set-addr -n {{hss-remote-addr}} -m {{mme-private-addr}}/24 -s
+          {{spgw-remote-addr}}/24 -M 208 93
+        deployFileAbsPath: /bin/
+        involveParas:
+        - hss-remote-addr
+        - mme-private-addr
+        - spgw-remote-addr
+      mme-start:
+        scope: start
+        order: 1
+        format: ./mme-start
+        deployFileAbsPath: /bin/
+        involveParas: []
+      mme-stop:
+        scope: stop
+        order: 1
+        format: ./mme-stop
+        deployFileAbsPath: /bin/
+        involveParas: []
+    HSS-NODE:
+      hss-set-addr:
+        scope: configure
+        order: 1
+        format: ./hss-set-addr -n {{hss-private-addr}} -m {{mme-remote-addr}}
+        deployFileAbsPath: /bin/
+        involveParas:
+        - hss-private-addr
+        - mme-remote-addr
+      hss-start:
+        scope: start
+        order: 1
+        format: ./hss-start
+        deployFileAbsPath: /bin/
+        involveParas: []
+      hss-stop:
+        scope: stop
+        order: 1
+        format: ./hss-stop
+        deployFileAbsPath: /bin/
+        involveParas: []
+metricInfo: {}
+monitorOptions:
+- monitorTargetSPGW:
+    format: '{{monitorConfigSPGW}}'
+    parameters:
+    - monitorConfigSPGW:
+        defaultValue: 'null'
+        function:
+        - type: REST
+          url: monitorConfigSPGW
+        script:
+          type: create_monitor_item
+          url: http://monitorServer/memory/availableMemory
+        target:
+        - SPGW-NODE
+        - SPGW-NODE
+        valueType: string
+    url: monitorTargetSPGW
+- monitorTargetMME-HSS:
+    format: '{{monitorConfigMME}} + {{monitorConfigHSS}}'
+    parameters:
+    - monitorConfigMME:
+        defaultValue: 'null'
+        function:
+        - type: REST
+          url: monitorConfigMME
+        script:
+          type: create_monitor_item
+          url: http://monitorServer/memory/availableMemory
+        target:
+        - MME-HSS-NODE
+        - MME-NODE
+        valueType: string
+    - monitorConfigHSS:
+        defaultValue: 'null'
+        function:
+        - type: REST
+          url: monitorConfigHSS
+        script:
+          type: create_monitor_item
+          url: http://monitorServer/memory/availableMemory
+        target:
+        - MME-HSS-NODE
+        - HSS-NODE
+        valueType: string
+    url: monitorTargetMME-HSS
+alarmInfo: {}
+planInfo:
+  instantiatePlan:
+    planFile: ns-web-lb-instantiate.bpmn
+    csarFilePath: Plans/Instantiate/ns-web-lb-instantiate.bpmn
+  scalingPlans:
+    SPGW_out_plan:
+      planFile: SPGW_out.bpmn
+      csarFilePath: Plans/Scaling/SPGW_out_plan/SPGW_out.bpmn
+    MME_out_plan:
+      planFile: MME_out.bpmn
+      csarFilePath: Plans/Scaling/MME_out_plan/MME_out.bpmn
+    MME_in_plan:
+      planFile: MME_in.bpmn
+      csarFilePath: Plans/Scaling/MME_in_plan/MME_in.bpmn
+    HSS_in_plan:
+      planFile: HSS_in.bpmn
+      csarFilePath: Plans/Scaling/HSS_in_plan/HSS_in.bpmn
+    SPGW_in_plan:
+      planFile: SPGW_in.bpmn
+      csarFilePath: Plans/Scaling/SPGW_in_plan/SPGW_in.bpmn
+    HSS_out_plan:
+      planFile: HSS_out.bpmn
+      csarFilePath: Plans/Scaling/HSS_out_plan/HSS_out.bpmn
+policies:
+  vnfSharingPolicies: {}
+  serviceExposurePolicies: {}
+  propertyExposurePolicies: {}
+  scalingPolicies:
+    SPGW_out_policy:
+      alarmId: SPGW_out_alarm
+      hookType: rest
+      actions:
+        SPGW_out_action:
+          involvedEntityType: vnf
+          involvedEntityId: SPGW-NODE
+          scalingOpId: SPGWScaleOut
+      cooldown: '60'
+      scalingPlan: SPGW_out_plan
+      description: SPGW scaling out policy
+    SPGW_in_policy:
+      alarmId: SPGW_in_alarm
+      hookType: rest
+      actions:
+        SPGW_in_action:
+          involvedEntityType: vnf
+          involvedEntityId: SPGW-NODE
+          scalingOpId: SPGWScaleIn
+      cooldown: '60'
+      scalingPlan: SPGW_in_plan
+      description: SPGW scaling in policy
+    HSS_out_policy:
+      alarmId: HSS_out_alarm
+      hookType: rest
+      actions:
+        HSS_out_action:
+          involvedEntityType: vnf
+          involvedEntityId: MME-HSS-NODE
+          scalingOpId: HSSScaleOut
+      cooldown: '60'
+      scalingPlan: HSS_out_plan
+      description: HSS scaling out policy
+    HSS_in_policy:
+      alarmId: HSS_in_alarm
+      hookType: rest
+      actions:
+        HSS_in_action:
+          involvedEntityType: vnf
+          involvedEntityId: MME-HSS-NODE
+          scalingOpId: HSSScaleIn
+      cooldown: '60'
+      scalingPlan: HSS_in_plan
+      description: HSS scaling in policy
+    MME_out_policy:
+      alarmId: MME_out_alarm
+      hookType: rest
+      actions:
+        MME_out_action:
+          involvedEntityType: vnf
+          involvedEntityId: MME-HSS-NODE
+          scalingOpId: MMEScaleOut
+      cooldown: '60'
+      scalingPlan: MME_out_plan
+      description: MME scaling out policy
+    MME_in_policy:
+      alarmId: MME_in_alarm
+      hookType: rest
+      actions:
+        MME_in_action:
+          involvedEntityType: vnf
+          involvedEntityId: MME-HSS-NODE
+          scalingOpId: MMEScaleIn
+      cooldown: '60'
+      scalingPlan: MME_in_plan
+      description: MME scaling in policy

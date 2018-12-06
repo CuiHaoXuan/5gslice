@@ -1,0 +1,342 @@
+#   model class for CSAR architect
+
+import re
+import logging
+import os
+import yaml
+from collections import OrderedDict
+
+from common.util.yaml_util import yaml_ordered_dump
+
+#logging.basicConfig(filename='csarArchitect.log', format='%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
+#log = logging.getLogger('csarArchitect')
+
+class CsarArchitect(object):
+    
+    def __init__(self, parent_dir):
+
+        '''
+
+        the dir architect of the csar
+        with the root dir as the input parent_dir,
+        return a map indicating the architect of csar,
+        the architect map consists of follows:
+
+            'parentDir'
+            'csarName'
+            'csarDir'
+            'metaDir'
+            'metaFilePath'
+            'defDir'
+            'nsdFilePath'
+            'vnfdFilePaths'
+                (vnfNodeId)
+            'vnfcdFilePaths'
+                (vnfNodeId)
+                    (vnfcNodeId)
+            'artiDir'
+            'artiFilePackDir'
+            'artiImageDir'
+            'artiFilePackPaths'
+                (vnfNodeId)
+                    (vnfcNodeId)
+            'artiImagePaths'
+                (vnfNodeId)
+                    (vnfcNodeId)
+            'monitorDir'
+            'monitorCfgDir'
+            'monitorArtiDir'
+            'monitorCfgFilePaths'
+                (vnfNodeId)
+                    (monOptId)
+            'monitorArtiFilePaths'
+                (vnfNodeId)
+                    (monOptId)
+            'alarmDir'
+            'alarmArtiDir'
+            'alarmArtiFilePaths'
+                (alarmId)
+            'planDir'
+            'planInstanDir'
+            'planInstanFilePath'
+            'planScaleDir'
+            'planScaleFilePaths'
+                (planId)
+
+        '''
+        try:
+            if not os.path.isdir(parent_dir):
+                raise Exception('the ''%s'' is not a directory' % parent_dir)
+        except Exception, e:
+            print Exception, ':', e
+        self.architect = {}
+        self.architect['parentDir'] = os.path.abspath(parent_dir)
+    
+    def set_architect_framework(self, *kws):
+        
+        '''
+        set csar architect framework
+        
+        '''
+        csar_n = '_'.join(kws) + '_csar'
+        self.architect['csarName'] = csar_n
+        self.architect['csarDir'] = os.path.join(self.architect['parentDir'], 
+                                                 csar_n, '')
+        if os.path.exists(self.architect['csarDir']):
+            os.system('rm -r ' + self.architect['csarDir'])
+        os.mkdir(self.architect['csarDir'])
+
+
+
+        self.architect['metaDir'] = os.path.join(self.architect['csarDir'],
+                                                 'Metadata', '')
+        os.mkdir(self.architect['metaDir'])
+
+
+############ for definitions ##############
+        self.architect['defDir'] = os.path.join(self.architect['csarDir'],
+                                                 'Definitions', '')
+        os.mkdir(self.architect['defDir'])
+
+
+############# for vnfc artifact ###############
+        self.architect['artiDir'] = os.path.join(self.architect['csarDir'],
+                                                 'DeploymentArtifacts', '')
+        os.mkdir(self.architect['artiDir'])
+
+        self.architect['artiFilePackDir'] = os.path.join(self.architect['artiDir'],
+                                                 'FilePacks', '')
+        os.mkdir(self.architect['artiFilePackDir'])
+
+        self.architect['artiImageDir'] = os.path.join(self.architect['artiDir'],
+                                                 'Images', '')
+        os.mkdir(self.architect['artiImageDir'])
+
+
+############## for monitor ###########
+        self.architect['monitorDir'] = os.path.join(self.architect['csarDir'],
+                                                 'Monitors', '')
+        os.mkdir(self.architect['monitorDir'])
+
+        self.architect['monitorArtiDir'] = os.path.join(self.architect['monitorDir'],
+                                                 'Artifacts', '')
+        os.mkdir(self.architect['monitorArtiDir'])
+
+############## for alarm ###########
+        self.architect['alarmDir'] = os.path.join(self.architect['csarDir'],
+                                                 'Alarms', '')
+        os.mkdir(self.architect['alarmDir'])
+
+        self.architect['alarmArtiDir'] = os.path.join(self.architect['alarmDir'],
+                                                 'Artifacts', '')
+        os.mkdir(self.architect['alarmArtiDir'])
+
+
+############ for plan ################
+        self.architect['planDir'] = os.path.join(self.architect['csarDir'],
+                                                 'Plans', '')
+        os.mkdir(self.architect['planDir'])
+
+        self.architect['planInstanDir'] = os.path.join(self.architect['planDir'],
+                                                 'Instantiate', '')
+        os.mkdir(self.architect['planInstanDir'])
+
+        self.architect['planScaleDir'] = os.path.join(self.architect['planDir'],
+                                                 'Scaling', '')
+        os.mkdir(self.architect['planScaleDir'])
+
+    
+    def add_meta_data(self, meta):
+        
+        '''
+        generate add metadata file,
+        the input meta is a ordereddict
+        
+        '''
+        f_name = 'metadata.yaml'
+        self.architect['metaFilePath'] = os.path.join(self.architect['metaDir'],
+                                                      f_name)
+        f = open(self.architect['metaFilePath'], 'w')
+        yaml_ordered_dump(meta, f, Dumper=yaml.SafeDumper, default_flow_style=False)
+        f.close()
+    
+    def add_nsd(self, ns_tid, ns_fid, nsd):
+        
+        '''
+        add nsd file,
+        parameters:
+            ns_tid: nsTypeId
+            ns_fid: nsFlavorId
+            nsd: ordereddict of the nsd data
+        
+        '''
+        n_list = []
+        n_list.append(ns_tid)
+        n_list.append(ns_fid)
+        f_name = '-'.join(n_list) + '_nsd.yaml'
+        self.architect['nsdFilePath'] = os.path.join(self.architect['defDir'],
+                                                      f_name)
+        f = open(self.architect['nsdFilePath'], 'w')
+        yaml_ordered_dump(nsd, f, Dumper=yaml.SafeDumper, default_flow_style=False)
+        f.close()
+    
+    def add_vnfd(self, vnf_nid, vnfd):
+        
+        '''
+        add vnfd file,
+        parameters:
+            vnf_tid: vnfNodeId
+            vnfd: ordereddict of the vnfd data
+        
+        '''
+        if 'vnfdFilePaths' not in self.architect.keys():
+            self.architect['vnfdFilePaths'] = {}
+        f_name = vnf_nid + '_vnfd.yaml'
+        self.architect['vnfdFilePaths'][vnf_nid] = \
+                         os.path.join(self.architect['defDir'], f_name)
+        f = open(self.architect['vnfdFilePaths'][vnf_nid], 'w')
+        yaml_ordered_dump(vnfd, f, Dumper=yaml.SafeDumper, default_flow_style=False)
+        f.close()
+    
+    def add_artifact_image(self, vnf_nid, vnfc_nid, file_path):
+
+        '''
+        add artifact image file,
+        parameters:
+            vnf_nid: vnfNodeId
+            vnfc_nid: vnfcNodeId
+            file_path: the local path of the image file
+        '''
+        if 'artiImagePaths' not in self.architect.keys():
+            self.architect['artiImagePaths'] = {}
+        f_p_abs = ''
+        if file_path:
+            f_p_abs = os.path.abspath(file_path)
+        d, f_p_name = os.path.split(f_p_abs)
+        if vnf_nid not in self.architect['artiImagePaths'].keys():
+            self.architect['artiImagePaths'][vnf_nid] = {}
+        tmp_dir = os.path.join(self.architect['artiImageDir'], vnf_nid, '')
+        if not os.path.exists(tmp_dir):
+            os.mkdir(tmp_dir)
+        f_p_dir = os.path.join(tmp_dir, vnfc_nid, '')
+        os.mkdir(f_p_dir)
+        f_p_path = os.path.join(f_p_dir, f_p_name)
+        os.system('cp ' + f_p_abs + ' ' + f_p_path)
+        self.architect['artiImagePaths'][vnf_nid][vnfc_nid] = f_p_path
+    
+    def add_artifact_file_pack(self, vnf_nid, vnfc_nid, file_path):
+
+        '''
+        add artifact file pack,
+        parameters:
+            vnf_nid: vnfNodeId
+            vnfc_nid: vnfcNodeId
+            file_pack_path: the local path of the file pack
+        '''
+        if 'artiFilePackPaths' not in self.architect.keys():
+            self.architect['artiFilePackPaths'] = {}
+        f_p_abs = ''
+        if file_path:
+            f_p_abs = os.path.abspath(file_path)
+        d, f_p_name = os.path.split(f_p_abs)
+        if vnf_nid not in self.architect['artiFilePackPaths'].keys():
+            self.architect['artiFilePackPaths'][vnf_nid] = {}
+        tmp_dir = os.path.join(self.architect['artiFilePackDir'], vnf_nid, '')
+        if not os.path.exists(tmp_dir):
+            os.mkdir(tmp_dir)
+        f_p_dir = os.path.join(tmp_dir, vnfc_nid, '')
+        os.mkdir(f_p_dir)
+        f_p_path = os.path.join(f_p_dir, f_p_name)
+        os.system('cp ' + f_p_abs + ' ' + f_p_path)
+        self.architect['artiFilePackPaths'][vnf_nid][vnfc_nid] = f_p_path
+    
+    def add_monitor_artifact_file_pack(self, vnf_nid, mon_id, file_path):
+
+        '''
+        add artifact file pack for a monitor option,
+        parameters:
+            vnf_nid: vnfNodeId
+            mon_id: monOptId
+            file_pack_path: the local path of the file pack
+        '''
+        if 'monitorArtiFilePaths' not in self.architect.keys():
+            self.architect['monitorArtiFilePaths'] = {}
+        f_p_abs = os.path.abspath(file_path)
+        d, f_p_name = os.path.split(f_p_abs)
+        if vnf_nid not in self.architect['monitorArtiFilePaths'].keys():
+            self.architect['monitorArtiFilePaths'][vnf_nid] = {}
+        tmp_dir = os.path.join(self.architect['monitorArtiDir'], vnf_nid, '')
+        if not os.path.exists(tmp_dir):
+            os.mkdir(tmp_dir)
+        f_p_dir = os.path.join(tmp_dir, mon_id, '')
+        os.mkdir(f_p_dir)
+        f_p_path = os.path.join(f_p_dir, f_p_name)
+        os.system('cp ' + f_p_abs + ' ' + f_p_path)
+        self.architect['monitorArtiFilePaths'][vnf_nid][mon_id] = f_p_path
+    
+    def add_alarm_file_pack(self, alarm_id, file_path):
+
+        '''
+        add alarm file pack,
+        parameters:
+            alarm_id: alarmId
+            file_path: the local path of the file pack
+        '''
+        if 'alarmArtiFilePaths' not in self.architect.keys():
+            self.architect['alarmArtiFilePaths'] = {}
+        f_p_abs = ''
+        if file_path:
+            f_p_abs = os.path.abspath(file_path)
+        d, f_p_name = os.path.split(f_p_abs)
+        f_p_dir = os.path.join(self.architect['alarmArtiDir'], alarm_id, '')
+        os.mkdir(f_p_dir)
+        f_p_path = os.path.join(f_p_dir, f_p_name)
+        os.system('cp ' + f_p_abs + ' ' + f_p_path)
+        self.architect['alarmArtiFilePaths'][alarm_id] = f_p_path
+
+    
+    def add_instan_plan(self, file_path):
+
+        '''
+        add instantiate plan file
+        parameters:
+           file_path: the local path of the plan file
+
+        '''
+        f_p_abs = os.path.abspath(file_path)
+        d, f_p_name = os.path.split(f_p_abs)
+        f_p_path = os.path.join(self.architect['planInstanDir'], f_p_name)
+        os.system('cp ' + f_p_abs + ' ' + f_p_path)
+        self.architect['planInstanFilePath'] = f_p_path
+
+    def add_scale_plan(self, plan_id, file_path):
+
+        '''
+        add scaling plan file
+        parameters:
+           plan_id: the id of the scaling plan
+           file_path: the local path of the plan file
+
+        '''
+        if 'planScaleFilePaths' not in self.architect.keys():
+            self.architect['planScaleFilePaths'] = {}
+        f_p_abs = os.path.abspath(file_path)
+        d, f_p_name = os.path.split(f_p_abs)
+        f_p_dir = os.path.join(self.architect['planScaleDir'], plan_id, '')
+        os.mkdir(f_p_dir)
+        f_p_path = os.path.join(f_p_dir, f_p_name)
+        os.system('cp ' + f_p_abs + ' ' + f_p_path)
+        self.architect['planScaleFilePaths'][plan_id] = f_p_path
+    
+    def get_csar_rel_path(self, abs_path):
+
+        '''
+        translate the input abs_path to a relative path in csar
+
+        '''
+        return abs_path.replace(self.architect['csarDir'], '')
+
+    def get_architect(self):
+        return self.architect
+
+    

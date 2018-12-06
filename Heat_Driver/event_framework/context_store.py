@@ -1,0 +1,283 @@
+#   The class of the context store
+
+from threading import Lock as lock
+from uuid import uuid3, NAMESPACE_DNS as NS
+from copy import deepcopy
+
+from common.util import get_class_func_name
+from context_process_handler import ContextProcessHandler
+
+
+__author__ = 'chenxin'    
+__date__ = '2017-3-31'  
+__version__ = 1.0
+
+CODE = 'utf-8'
+
+class ContextStore(object):
+    
+    TEST_CTX_NAMESPACE = 'test.context'
+    
+    def __init__(self):
+        '''
+        a storage used to store the component context
+        persistent storage could be added in future
+
+        '''
+        self.root_context = {} 
+        '''
+        root context dict, contains the context item list as the value, 
+        and the context namespace the context item list belongs to as the key 
+        
+        '''
+        self.context_item_ids = {} # a dict contains all the context item ids under each namespace
+        
+        self.root_context_locator = {}
+        '''
+        root context locator list, contains the context locator 
+        which is calculated by both the context namespace and the item id,
+        at the same position where the context is stored 
+        in the context item list under the context namespace
+        '''
+        
+        self.root_mutex = lock() # the mutex for append or pop element in root context list
+        
+        self.context_mutexs = {}
+        '''
+        contains a mutex or None object for the context item at the
+        same position in the root context
+        '''
+
+    def _get_store_id(self, ctx_ns, item_id):
+
+        '''
+        get the context namespace id and the context item id used in
+        the context store, according to the context namespace and the 
+        context item id
+        params:
+            ctx_ns: context namespace
+            item_id: context item id
+        return:
+            [context namespace id, context item id used in the store]
+        '''
+        item_gid = uuid3(NS, '.'.join([ctx_ns, str(item_id)]).encode(CODE))
+        ctx_ns_id = uuid3(NS, ctx_ns.encode(CODE))
+        return [ctx_ns_id, item_gid]
+
+    def _get_namespace_id(self, ctx_ns):
+        return uuid3(NS, ctx_ns.encode(CODE))
+    
+    def _get_context_item(self, ctx_ns_id, item_gid):
+
+        '''
+        get the context item data by 
+        context namespace id and the context item id used in
+        the context store
+        params:
+            ctx_ns_id: the id of the namespace to which the context item to be stored belongs
+            item_gid: the id of the context item to be stored
+        return:
+            ctx_item: context item data
+        '''
+        i = self.root_context_locator[ctx_ns_id].index(item_gid)
+        return self.root_context[ctx_ns_id][i]
+    
+    def _get_context_item_mutex(self, ctx_ns_id, item_gid):
+
+        '''
+        get the context item mutex by 
+        context namespace id and the context item id used in
+        the context store
+        params:
+            ctx_ns_id: the id of the namespace to which the context item to be stored belongs
+            item_gid: the id of the context item to be stored
+        return:
+            mutex: context item mutex
+        '''
+        i = self.root_context_locator[ctx_ns_id].index(item_gid)
+        return self.context_mutexs[ctx_ns_id][i]
+    
+    def _pers_store_context_item(self, ctx_ns_id, item_gid):
+
+        '''
+        persistently store the context item
+        params:
+            ctx_ns_id: the id of the namespace to which the context item to be stored belongs
+            item_gid: the id of the context item to be stored
+        '''
+
+        print 'store the context item %s@%s' % (str(item_gid).encode(CODE), 
+                                               str(ctx_ns_id).encode(CODE))
+    
+    def add_context_item(self, ctx, ctx_ns, item_id, item_id_n='context_item_id', is_lock=True):
+        
+        '''
+        add a context item to the store, the namespace of the added item 
+        will be created if it dosen't exist
+        params:
+            ctx: the data of the context item added
+            ctx_ns: the namespace of the added context item
+            item_id: the id of the context item, should be unique in the namespace
+            item_id_n: the name for context item id
+            is_lock: indicating whether add a multi-threading protection for the added context
+        '''
+        try:
+            ctx_ns_id, item_gid = self._get_store_id(ctx_ns, item_id)
+            if self.root_mutex.acquire():
+                try:
+                    ext_ctx = {item_id_n: str(item_id)}
+                    ext_ctx.update(ctx)
+                    ns_locators = self.root_context_locator.setdefault(ctx_ns_id, [])
+                    if item_gid in ns_locators:
+                        i = ns_locators.index(item_gid)
+                        self.root_context[ctx_ns_id].pop(i)
+                        self.root_context_locator[ctx_ns_id].pop(i)
+                        self.context_mutexs[ctx_ns_id].pop(i)
+                        self.context_item_ids[ctx_ns].pop(i)
+                    self.context_item_ids.setdefault(ctx_ns, []).append(item_id)
+                    self.root_context.setdefault(ctx_ns_id, []).append(ext_ctx)
+                    self.root_context_locator.setdefault(ctx_ns_id, []).append(item_gid)
+                    if is_lock:
+                        self.context_mutexs.setdefault(ctx_ns_id, []).append(lock())
+                    else:
+                        self.context_mutexs.setdefault(ctx_ns_id, []).append(None)
+                except Exception, e:
+                    print Exception, ':', e, \
+                                ' in %s:%s' % get_class_func_name(self)
+                    self.root_mutex.release()
+                else:
+                    self.root_mutex.release()
+        except Exception, e:
+            print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)
+
+    def del_context_item(self, ctx_ns, item_id):
+
+        '''
+        delete a context item from the store
+
+        '''
+        try:
+            ctx_ns_id, item_gid = self._get_store_id(ctx_ns, item_id)
+            if self.root_mutex.acquire():
+                try:
+                    if ctx_ns_id not in self.root_context_locator.keys():
+                        self.root_mutex.release()
+                        print 'context store: no namespace: ', ctx_ns
+                        return
+                    if item_gid not in self.root_context_locator[ctx_ns_id]:
+                        self.root_mutex.release()
+                        print 'context store: no context item id: ', item_id
+                        return
+                    i = self.root_context_locator[ctx_ns_id].index(item_gid)
+                    mutex = self.context_mutexs[ctx_ns_id].pop(i)
+                    if mutex:
+                        if mutex.acquire():
+                            self.root_context[ctx_ns_id].pop(i)
+                            self.root_context_locator[ctx_ns_id].pop(i)
+                            self.context_item_ids[ctx_ns].pop(i)
+                            mutex.release()
+                    else:
+                        self.root_context[ctx_ns_id].pop(i)
+                        self.root_context_locator[ctx_ns_id].pop(i)
+                        self.context_item_ids[ctx_ns].pop(i)
+                except Exception, e:
+                    print Exception, ':', e, \
+                            ' in %s:%s' % get_class_func_name(self)
+                    self.root_mutex.release()
+                else:
+                    if len(self.context_mutexs[ctx_ns_id]) == 0:
+                        self.root_context.pop(ctx_ns_id)
+                        self.root_context_locator.pop(ctx_ns_id)
+                        self.context_mutexs.pop(ctx_ns_id)
+                        self.context_item_ids.pop(ctx_ns)
+                    self.root_mutex.release()
+        except Exception, e:
+            print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)
+                       
+    def get_context_item_process_handler(self, ctx_ns, item_id):
+
+        '''
+        get the context process handler handling the context item, 
+        located by the context namespace and the context item id
+        params:
+            ctx_ns: context namespace
+            item_id: context item id
+        '''
+        try:
+            if self.root_mutex.acquire():
+                try:
+                    if item_id not in self.context_item_ids.get(ctx_ns, []):
+                        self.root_mutex.release()
+                        return None
+                    ctx_ns_id, item_gid = self._get_store_id(ctx_ns, item_id)
+                    ctx_item = self._get_context_item(ctx_ns_id, item_gid)
+                    mutex = self._get_context_item_mutex(ctx_ns_id, item_gid)
+                except Exception, e:
+                    print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)
+                    self.root_mutex.release()
+                    return None
+                else:
+                    self.root_mutex.release()
+            def store_if():
+                self._pers_store_context_item(ctx_ns_id, item_gid)
+            
+            return ContextProcessHandler(ctx_item, mutex, store_if)
+
+        except Exception, e:
+            print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)
+            return None
+
+    def get_context_namespace_process_handler(self, ctx_ns):
+
+        '''
+        get the context process handlers handling the context items under the namespace
+        params:
+            ctx_ns: context namespace
+        return:
+            a handler list contains all the handlers for each item under the namespace
+        '''
+        p_handlers = []
+        try:
+            if self.root_mutex.acquire():
+                try:
+                    if ctx_ns not in self.context_item_ids.keys():
+                        self.root_mutex.release()
+                        return []
+                    ctx_ns_id = self._get_namespace_id(ctx_ns)
+                    for i in range(0, len(self.root_context[ctx_ns_id])):
+                        ctx_item = self.root_context[ctx_ns_id][i]
+                        item_gid = self.root_context_locator[ctx_ns_id][i]
+                        mutex = self.context_mutexs[ctx_ns_id][i]
+                        def store_if():
+                            self._pers_store_context_item(ctx_ns_id, item_gid)
+                        p_handlers.append(ContextProcessHandler(ctx_item, mutex, store_if))
+                except Exception, e:
+                    print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)
+                    self.root_mutex.release()
+                    return None
+                else:
+                    self.root_mutex.release()
+            return p_handlers
+        except Exception, e:
+            print Exception, ':', e, \
+                      ' in %s:%s' % get_class_func_name(self)
+            return None
+
+    def get_all_context_namespaces(self):
+        
+        if self.root_mutex.acquire():
+            ns_list = deepcopy(self.context_item_ids.keys())
+            self.root_mutex.release()
+        return ns_list
+    
+    def get_context_item_ids(self, ctx_ns):
+        
+        if self.root_mutex.acquire():
+            id_list = deepcopy(self.context_item_ids.get(ctx_ns, []))
+            self.root_mutex.release()
+        return id_list

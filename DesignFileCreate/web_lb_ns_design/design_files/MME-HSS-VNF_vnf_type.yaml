@@ -1,0 +1,104 @@
+Info:
+  vnfTypeId: MME-HSS-VNF
+  version: 1.0.0
+  vendor: iaa
+  description: MME-HSS-VNF
+VnfcNodes:
+  MME-NODE:
+    vnfcTypeId: MME-VNFC
+  HSS-NODE:
+    vnfcTypeId: HSS-VNFC
+EndPoints:
+  MME-ENDPOINT:
+    vnfcNodeId: MME-NODE
+    vnfcEndPointId: MME-PORTAL
+    description: MME-NODE:MME-PORTAL
+  HSS-ENDPOINT:
+    vnfcNodeId: HSS-NODE
+    vnfcEndPointId: HSS-PORTAL
+    description: HSS-NODE:HSS-PORTAL
+Connections:
+  VNFC-CONNECTION-MME-HSS:
+    vnfcRelationshipTypeId: VNFC-RELATION-MME-HSS
+    endOne:
+      vnfcNodeId: MME-NODE
+      vnfcEndPointId: MME-PORTAL
+    endTwo:
+      vnfcNodeId: HSS-NODE
+      vnfcEndPointId: HSS-PORTAL
+VnfcPropertiesMapping:
+  MME-HSS-ADDR-MAPPING:
+    multiInstanceOption: true
+    sourceProperty:
+      vnfcNodeId: HSS-NODE
+      propertyId: mme-remote-addr
+    targetProperty:
+      vnfcNodeId: MME-NODE
+      propertyId: mme-public-addr
+  HSS-MME-ADDR-MAPPING:
+    multiInstanceOption: true
+    sourceProperty:
+      vnfcNodeId: MME-NODE
+      propertyId: hss-remote-addr
+    targetProperty:
+      vnfcNodeId: HSS-NODE
+      propertyId: hss-public-addr
+ServiceExposures: {}
+MonitorOptions:
+- monitorTargetMME-HSS:
+    format: '{{monitorConfigMME}} + {{monitorConfigHSS}}'
+    parameters:
+    - monitorConfigMME:
+        defaultValue: 'null'
+        function:
+        - type: REST
+          url: monitorConfigMME
+        script:
+          type: create_monitor_item
+          url: http://monitorServer/memory/availableMemory
+        target:
+        - MME-HSS-NODE
+        - MME-NODE
+        valueType: string
+    - monitorConfigHSS:
+        defaultValue: 'null'
+        function:
+        - type: REST
+          url: monitorConfigHSS
+        script:
+          type: create_monitor_item
+          url: http://monitorServer/memory/availableMemory
+        target:
+        - MME-HSS-NODE
+        - HSS-NODE
+        valueType: string
+    url: monitorTargetMME-HSS
+ScalingInfo:
+  scalingGroups:
+    MMEGroup:
+      target: MME-NODE
+      min: '1'
+      max: '3'
+      defaultGroup: '1'
+    HSSGroup:
+      target: HSS-NODE
+      min: '1'
+      max: '2'
+      defaultGroup: '1'
+  scalingOperations:
+    MMEScaleOut:
+      scalingStep: '1'
+      targetGroup: MMEGroup
+      description: MME scale out
+    HSSScaleOut:
+      scalingStep: '1'
+      targetGroup: HSSGroup
+      description: HSS scale out
+    MMEScaleIn:
+      scalingStep: '-1'
+      targetGroup: MMEGroup
+      description: MME scale in
+    HSSScaleIn:
+      scalingStep: '-1'
+      targetGroup: HSSGroup
+      description: HSS scale in

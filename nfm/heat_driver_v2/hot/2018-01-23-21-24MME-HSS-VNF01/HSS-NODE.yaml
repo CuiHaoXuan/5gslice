@@ -1,0 +1,49 @@
+heat_template_version: 2016-10-14
+
+description:
+
+parameters:
+  private_net:
+    type: string
+    description: The network for the VM
+  public_net:
+    type: string
+    description: ID of public network for which floating IP addresses will be allocated
+  image:
+    type: string
+    description: ID of public network for which floating IP addresses will be allocated
+  flavor:
+    type: string
+    description: ID of public network for which floating IP addresses will be allocated
+
+resources:
+  HSS-NODE:
+    type: OS::Nova::Server
+    properties:
+      name: HSS-NODE
+      image: { get_param : image }
+      flavor: { get_param : flavor}
+      networks:
+        - port: { get_resource: 'HSS-NODE_port' }
+      user_data: |
+        #!/bin/bash
+        passwd ubuntu<<EOF
+        ubuntu
+        ubuntu
+        EOF
+        sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+        service ssh restart
+        sed -i 's/^Server=.*$/Server=172.158.208.3/g' /etc/zabbix/zabbix_agentd.conf
+        sed -i 's/^Hostname=.*$/Hostname=HSS-NODE/g' /etc/zabbix/zabbix_agentd.conf
+        service zabbix-agent restart
+
+  HSS-NODE_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: private_net }
+
+  HSS-NODE_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public_net }
+      port_id: { get_resource: 'HSS-NODE_port' }

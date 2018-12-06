@@ -1,0 +1,51 @@
+tosca_definitions_version: tosca_simple_profile_for_nfv_1_0
+description: DB-VNF
+metadata:
+  id: DB-NODE
+  vendor: iaa
+  version: 1.0.0
+node_types:
+  tosca.nodes.nfv.VNF.DB-NODE:
+    derived_from: tosca.nodes.nfv.VNF
+    requirements:
+      virtualLink_{{DB-ENDPOINT}}:
+        capability: tosca.capabilities. nfv.VirtualLinkable
+        relationship: tosca.relationships.nfv.VirtualLinksTo
+  tosca.nodes.nfv.VDU.Customized:
+    derived_from: tosca.nodes.nfv.VDU
+    properties:
+      vim_type:
+        type: string
+        description: vim type for the current vdu
+      flavor_type:
+        type: string
+        description: flavor type used in the vim type for the vdu
+      os_type:
+        type: string
+        description: os type for the current vdu
+      image_name:
+        type: string
+        description: image file name used for the vdu
+      image_location:
+        type: string
+        description: location of the image file
+topology_template:
+  inputs: {}
+  substitution_mappings:
+    node_type: tosca.nodes.nfv.VNF.DB-NODE
+    requirements:
+      virtualLink_{{DB-ENDPOINT}}: '[CP_{{DB-NODE}}_{{DB-PORTAL}}, virtualLink]'
+  node_templates:
+    VDU_{{DB-NODE}}:
+      type: tosca.nodes.nfv.VDU.Customized
+      properties:
+        vim_type: openstack
+        flavor_type: m1.tiny
+        os_type: ubuntu14.04
+        image_name: DB-VNFC_image.qcow
+        image_location: null
+    CP_{{DB-NODE}}_{{DB-PORTAL}}:
+      type: tosca.nodes.nfv.CP
+      requirements:
+        virtualbinding: VDU_{{DB-NODE}}
+  policies: {}
